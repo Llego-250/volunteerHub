@@ -1,0 +1,794 @@
+@startuml VolunteerHub_Sequence_Diagram_User_Registration
+title Sequence Diagram: User Registration and Event Sign-up
+
+actor Volunteer
+participant "Web Browser" as Browser
+participant "auth.js" as AuthJS
+participant "users.php API" as UserAPI
+participant "Database" as DB
+
+Volunteer -> Browser: Navigate to platform
+Browser -> Browser: Display registration modal
+Volunteer -> Browser: Fill registration form\n(name, email, password, role)
+Browser -> AuthJS: Submit registration
+AuthJS -> AuthJS: Validate form data
+AuthJS -> UserAPI: POST /api/users.php\n{name, email, password, role}
+UserAPI -> UserAPI: Hash password (bcrypt)
+UserAPI -> DB: INSERT INTO users
+DB --> UserAPI: User created (user_id)
+UserAPI --> AuthJS: {success: true, user: {...}}
+AuthJS -> AuthJS: Store user session
+AuthJS --> Browser: Redirect to dashboard
+Browser --> Volunteer: Display volunteer dashboard
+
+@enduml
+
+@startuml VolunteerHub_Sequence_Diagram_Event_Registration
+title Sequence Diagram: Volunteer Event Registration
+
+actor Volunteer
+participant "Browser" as Browser
+participant "events-page.js" as EventJS
+participant "events.php API" as EventAPI
+participant "registrations.php API" as RegAPI
+participant "Database" as DB
+
+Volunteer -> Browser: Browse events page
+Browser -> EventJS: Load events
+EventJS -> EventAPI: GET /api/events.php
+EventAPI -> DB: SELECT * FROM events
+DB --> EventAPI: Event list
+EventAPI --> EventJS: JSON events data
+EventJS --> Browser: Display event cards
+
+Volunteer -> Browser: Click "Register" button
+Browser -> EventJS: Trigger registration
+EventJS -> RegAPI: POST /api/registrations.php\n{event_id, user_id}
+RegAPI -> DB: Check capacity & existing registration
+DB --> RegAPI: Validation result
+RegAPI -> DB: INSERT INTO event_registrations
+DB --> RegAPI: Registration created
+RegAPI -> DB: UPDATE events SET current_participants
+DB --> RegAPI: Updated
+RegAPI --> EventJS: {success: true, message}
+EventJS --> Browser: Show success notification
+Browser --> Volunteer: Display updated UI
+
+@enduml
+
+@startuml VolunteerHub_Sequence_Diagram_Messaging
+title Sequence Diagram: User Messaging System
+
+actor User1 as "User (Sender)"
+participant "Browser" as Browser
+participant "volunteer-dashboard.js" as DashJS
+participant "messages.php API" as MsgAPI
+participant "Database" as DB
+actor User2 as "User (Receiver)"
+
+User1 -> Browser: Open messages section
+Browser -> DashJS: Load conversations
+DashJS -> MsgAPI: GET /api/messages.php?user_id=X
+MsgAPI -> DB: SELECT messages WHERE\nsender_id=X OR receiver_id=X
+DB --> MsgAPI: Message list
+MsgAPI --> DashJS: JSON messages
+DashJS --> Browser: Display conversation list
+
+User1 -> Browser: Select conversation/compose new
+User1 -> Browser: Type message content
+Browser -> DashJS: Submit message
+DashJS -> MsgAPI: POST /api/messages.php\n{sender_id, receiver_id, content}
+MsgAPI -> DB: INSERT INTO messages
+DB --> MsgAPI: Message created
+MsgAPI --> DashJS: {success: true}
+DashJS --> Browser: Update conversation view
+Browser --> User1: Display sent message
+
+note right of User2
+  User2 will see new message
+  when they refresh or
+  load messages
+end note
+
+@enduml
+
+@startuml VolunteerHub_Sequence_Diagram_Hour_Logging
+title Sequence Diagram: Volunteer Hour Logging and Approval
+
+actor Volunteer
+participant "Browser" as Browser
+participant "volunteer-dashboard.js" as VolDash
+participant "hours.php API" as HourAPI
+participant "Database" as DB
+actor Organizer
+participant "organizer-dashboard.js" as OrgDash
+
+Volunteer -> Browser: Navigate to "Log Hours"
+Browser -> VolDash: Display hour logging form
+Volunteer -> Browser: Enter hours details\n(event_id, hours, description)
+Browser -> VolDash: Submit hours
+VolDash -> HourAPI: POST /api/hours.php\n{user_id, event_id, hours, description}
+HourAPI -> DB: INSERT INTO volunteer_hours\n(status='pending')
+DB --> HourAPI: Hours logged
+HourAPI --> VolDash: {success: true}
+VolDash --> Browser: Show success message
+Browser --> Volunteer: Display pending hours
+
+... Hours await approval ...
+
+Organizer -> Browser: Open organizer dashboard
+Browser -> OrgDash: Load pending hours
+OrgDash -> HourAPI: GET /api/hours.php?status=pending
+HourAPI -> DB: SELECT * FROM volunteer_hours\nWHERE status='pending'
+DB --> HourAPI: Pending hours list
+HourAPI --> OrgDash: JSON data
+OrgDash --> Browser: Display approval table
+
+Organizer -> Browser: Review and approve hours
+Browser -> OrgDash: Approve hours
+OrgDash -> HourAPI: PUT /api/hours.php\n{hour_id, status='approved'}
+HourAPI -> DB: UPDATE volunteer_hours\nSET status='approved'
+DB --> HourAPI: Updated
+HourAPI -> HourAPI: Check badge eligibility
+HourAPI -> DB: Award badges if threshold met
+DB --> HourAPI: Badge awarded
+HourAPI --> OrgDash: {success: true}
+OrgDash --> Browser: Update UI
+Browser --> Organizer: Show approved status
+
+@enduml
+
+@startuml VolunteerHub_UseCase_Diagram
+title Use Case Diagram: VolunteerHub Platform
+
+left to right direction
+
+actor "Volunteer" as V
+actor "Event Organizer" as O
+actor "Admin" as A
+
+rectangle "VolunteerHub System" {
+  
+  package "Authentication" {
+    usecase "Register Account" as UC1
+    usecase "Login" as UC2
+    usecase "Logout" as UC3
+    usecase "Update Profile" as UC4
+  }
+  
+  package "Event Management" {
+    usecase "Browse Events" as UC5
+    usecase "Search Events" as UC6
+    usecase "View Event Details" as UC7
+    usecase "Create Event" as UC8
+    usecase "Edit Event" as UC9
+    usecase "Delete Event" as UC10
+    usecase "Register for Event" as UC11
+    usecase "Cancel Registration" as UC12
+  }
+  
+  package "Communication" {
+    usecase "Send Message" as UC13
+    usecase "View Messages" as UC14
+    usecase "Contact Support" as UC15
+  }
+  
+  package "Volunteer Tracking" {
+    usecase "Log Volunteer Hours" as UC16
+    usecase "View Hour History" as UC17
+    usecase "Approve Hours" as UC18
+    usecase "Reject Hours" as UC19
+  }
+  
+  package "Gamification" {
+    usecase "View Badges" as UC20
+    usecase "Earn Badges" as UC21
+    usecase "Track Progress" as UC22
+  }
+  
+  package "Dashboard" {
+    usecase "View Volunteer Dashboard" as UC23
+    usecase "View Organizer Dashboard" as UC24
+    usecase "Manage Registrations" as UC25
+  }
+}
+
+' Volunteer relationships
+V --> UC1
+V --> UC2
+V --> UC3
+V --> UC4
+V --> UC5
+V --> UC6
+V --> UC7
+V --> UC11
+V --> UC12
+V --> UC13
+V --> UC14
+V --> UC15
+V --> UC16
+V --> UC17
+V --> UC20
+V --> UC21
+V --> UC22
+V --> UC23
+
+' Organizer relationships
+O --> UC1
+O --> UC2
+O --> UC3
+O --> UC4
+O --> UC5
+O --> UC6
+O --> UC7
+O --> UC8
+O --> UC9
+O --> UC10
+O --> UC13
+O --> UC14
+O --> UC15
+O --> UC18
+O --> UC19
+O --> UC24
+O --> UC25
+
+' Admin relationships (inherits both roles)
+A --|> V
+A --|> O
+
+' Include relationships
+UC11 ..> UC7 : <<include>>
+UC12 ..> UC7 : <<include>>
+UC16 ..> UC7 : <<include>>
+UC21 ..> UC17 : <<include>>
+
+' Extend relationships
+UC6 ..> UC5 : <<extend>>
+UC25 ..> UC24 : <<extend>>
+
+@enduml
+
+@startuml VolunteerHub_Activity_Diagram_Event_Creation
+title Activity Diagram: Event Creation Process
+
+start
+
+:Organizer logs into platform;
+
+:Navigate to Organizer Dashboard;
+
+:Click "Create Event" button;
+
+:Fill event creation form;
+note right
+  * Event title
+  * Description
+  * Category
+  * Date & time
+  * Location
+  * Max participants
+  * Required hours
+end note
+
+if (All fields valid?) then (yes)
+  :Submit form data;
+  
+  :API validates input;
+  
+  if (Validation successful?) then (yes)
+    :Insert event into database;
+    
+    if (Database insertion successful?) then (yes)
+      :Generate event ID;
+      
+      :Display success message;
+      
+      :Refresh events list;
+      
+      :Show new event in dashboard;
+      
+      :Send confirmation notification;
+      
+      stop
+      
+    else (no)
+      :Display database error;
+      
+      :Log error details;
+      
+      :Prompt retry;
+      
+      stop
+    endif
+    
+  else (no)
+    :Display validation errors;
+    
+    :Highlight invalid fields;
+    
+    backward:Correct form data;
+    
+  endif
+  
+else (no)
+  :Show field requirements;
+  
+  backward:Complete missing fields;
+  
+endif
+
+@enduml
+
+@startuml VolunteerHub_Activity_Diagram_Volunteer_Registration
+title Activity Diagram: Volunteer Event Registration Workflow
+
+|Volunteer|
+start
+
+:Browse available events;
+
+:View event details;
+
+if (Interested in event?) then (yes)
+  :Click "Register" button;
+  
+  |System|
+  :Verify user authentication;
+  
+  if (User logged in?) then (yes)
+    
+    :Check event capacity;
+    
+    if (Event has space?) then (yes)
+      
+      :Check existing registration;
+      
+      if (Already registered?) then (no)
+        
+        :Create registration record;
+        
+        :Update participant count;
+        
+        :Send confirmation email;
+        
+        |Volunteer|
+        :Receive confirmation;
+        
+        :View "Registered" status;
+        
+        :Event added to dashboard;
+        
+        stop
+        
+      else (yes)
+        :Display "Already registered";
+        stop
+      endif
+      
+    else (no)
+      :Display "Event full" message;
+      
+      :Offer waitlist option;
+      stop
+    endif
+    
+  else (no)
+    :Redirect to login page;
+    
+    :User logs in;
+    
+    backward:Return to event;
+    
+  endif
+  
+else (no)
+  :Continue browsing;
+  stop
+endif
+
+@enduml
+
+@startuml VolunteerHub_Activity_Diagram_Hour_Approval
+title Activity Diagram: Volunteer Hour Approval Process
+
+|Volunteer|
+start
+
+:Complete volunteer work;
+
+:Navigate to dashboard;
+
+:Click "Log Hours";
+
+:Fill hours form;
+note right
+  * Select event
+  * Enter hours
+  * Add description
+end note
+
+:Submit hours;
+
+|System|
+:Create hour record\n(status: pending);
+
+:Notify event organizer;
+
+|Organizer|
+:Receive notification;
+
+:View pending hours;
+
+:Review submission;
+
+if (Hours accurate?) then (yes)
+  
+  :Click "Approve";
+  
+  |System|
+  :Update status to "approved";
+  
+  :Add hours to volunteer total;
+  
+  :Check badge thresholds;
+  
+  if (Badge criteria met?) then (yes)
+    :Award new badge;
+    
+    :Notify volunteer;
+    
+    |Volunteer|
+    :Receive badge notification;
+    
+    :View new badge;
+  else (no)
+    |Volunteer|
+  endif
+  
+  :View approved hours;
+  
+  stop
+  
+else (no)
+  
+  :Click "Reject";
+  
+  :Enter rejection reason;
+  
+  |System|
+  :Update status to "rejected";
+  
+  :Send notification to volunteer;
+  
+  |Volunteer|
+  :Receive rejection notice;
+  
+  :View reason;
+  
+  if (Want to resubmit?) then (yes)
+    backward:Correct and resubmit;
+  else (no)
+    stop
+  endif
+  
+endif
+
+@enduml
+
+@startuml VolunteerHub_Class_Diagram
+title Class Diagram: VolunteerHub System
+
+class User {
+  - user_id: int
+  - name: varchar(100)
+  - email: varchar(100)
+  - password: varchar(255)
+  - role: enum('volunteer', 'organizer')
+  - created_at: timestamp
+  --
+  + register(): boolean
+  + login(): boolean
+  + logout(): void
+  + updateProfile(): boolean
+  + getProfile(): array
+  + sendMessage(): boolean
+  + getMessages(): array
+}
+
+class Event {
+  - event_id: int
+  - title: varchar(200)
+  - description: text
+  - category: varchar(50)
+  - event_date: datetime
+  - location: varchar(200)
+  - organizer_id: int
+  - max_participants: int
+  - current_participants: int
+  - required_hours: decimal(5,2)
+  - created_at: timestamp
+  --
+  + create(): boolean
+  + update(): boolean
+  + delete(): boolean
+  + getDetails(): array
+  + getAll(): array
+  + search(criteria): array
+  + checkCapacity(): boolean
+}
+
+class EventRegistration {
+  - registration_id: int
+  - event_id: int
+  - user_id: int
+  - registration_date: timestamp
+  - status: enum('registered', 'attended', 'cancelled')
+  --
+  + register(): boolean
+  + cancel(): boolean
+  + updateStatus(): boolean
+  + getByUser(): array
+  + getByEvent(): array
+  + checkDuplicate(): boolean
+}
+
+class Message {
+  - message_id: int
+  - sender_id: int
+  - receiver_id: int
+  - content: text
+  - sent_at: timestamp
+  - is_read: boolean
+  --
+  + send(): boolean
+  + markAsRead(): boolean
+  + getConversation(): array
+  + getUserMessages(): array
+  + delete(): boolean
+}
+
+class VolunteerHour {
+  - hour_id: int
+  - user_id: int
+  - event_id: int
+  - hours: decimal(5,2)
+  - description: text
+  - status: enum('pending', 'approved', 'rejected')
+  - submitted_at: timestamp
+  - reviewed_at: timestamp
+  --
+  + logHours(): boolean
+  + approve(): boolean
+  + reject(): boolean
+  + getTotalHours(): decimal
+  + getByStatus(): array
+  + getByUser(): array
+}
+
+class Badge {
+  - badge_id: int
+  - name: varchar(100)
+  - description: text
+  - icon: varchar(100)
+  - criteria_hours: decimal(5,2)
+  --
+  + create(): boolean
+  + getAll(): array
+  + getDetails(): array
+}
+
+class UserBadge {
+  - user_badge_id: int
+  - user_id: int
+  - badge_id: int
+  - earned_at: timestamp
+  --
+  + award(): boolean
+  + getUserBadges(): array
+  + checkEligibility(): boolean
+}
+
+class Contact {
+  - contact_id: int
+  - name: varchar(100)
+  - email: varchar(100)
+  - subject: varchar(200)
+  - message: text
+  - submitted_at: timestamp
+  --
+  + submit(): boolean
+  + getAll(): array
+  + delete(): boolean
+}
+
+' Relationships
+User "1" -- "0..*" Event : organizes >
+User "1" -- "0..*" EventRegistration : registers >
+User "1" -- "0..*" Message : sends >
+User "1" -- "0..*" Message : receives >
+User "1" -- "0..*" VolunteerHour : logs >
+User "1" -- "0..*" UserBadge : earns >
+
+Event "1" -- "0..*" EventRegistration : has >
+Event "1" -- "0..*" VolunteerHour : tracks >
+
+Badge "1" -- "0..*" UserBadge : awarded as >
+
+EventRegistration "0..*" -- "1" User
+EventRegistration "0..*" -- "1" Event
+
+VolunteerHour "0..*" -- "1" User
+VolunteerHour "0..*" -- "1" Event
+
+UserBadge "0..*" -- "1" User
+UserBadge "0..*" -- "1" Badge
+
+note right of User
+  Role determines access:
+  - Volunteer: register, log hours, earn badges
+  - Organizer: create events, approve hours
+end note
+
+note right of EventRegistration
+  Unique constraint on (event_id, user_id)
+  prevents duplicate registrations
+end note
+
+note right of VolunteerHour
+  Hours must be approved by
+  event organizer before counting
+  toward badge eligibility
+end note
+
+@enduml
+
+@startuml VolunteerHub_Class_Diagram_Detailed_API
+title Detailed Class Diagram: API Layer
+
+package "API Controllers" {
+  
+  class UserController {
+    - db: PDO
+    --
+    + handleRequest(): void
+    + register(data): array
+    + login(credentials): array
+    + getUser(user_id): array
+    + updateUser(user_id, data): array
+    + deleteUser(user_id): array
+    - validateEmail(email): boolean
+    - hashPassword(password): string
+    - verifyPassword(password, hash): boolean
+  }
+  
+  class EventController {
+    - db: PDO
+    --
+    + handleRequest(): void
+    + createEvent(data): array
+    + getEvents(filters): array
+    + getEvent(event_id): array
+    + updateEvent(event_id, data): array
+    + deleteEvent(event_id): array
+    + searchEvents(query): array
+    - validateEventData(data): boolean
+    - checkOrganizerPermission(user_id): boolean
+  }
+  
+  class RegistrationController {
+    - db: PDO
+    --
+    + handleRequest(): void
+    + registerForEvent(data): array
+    + cancelRegistration(reg_id): array
+    + getUserRegistrations(user_id): array
+    + getEventRegistrations(event_id): array
+    + updateRegistrationStatus(reg_id, status): array
+    - checkCapacity(event_id): boolean
+    - checkDuplicateRegistration(user_id, event_id): boolean
+  }
+  
+  class MessageController {
+    - db: PDO
+    --
+    + handleRequest(): void
+    + sendMessage(data): array
+    + getMessages(user_id): array
+    + getConversation(user1_id, user2_id): array
+    + markAsRead(message_id): array
+    + deleteMessage(message_id): array
+  }
+  
+  class HourController {
+    - db: PDO
+    --
+    + handleRequest(): void
+    + logHours(data): array
+    + approveHours(hour_id): array
+    + rejectHours(hour_id, reason): array
+    + getUserHours(user_id): array
+    + getPendingHours(): array
+    + getTotalHours(user_id): decimal
+    - checkBadgeEligibility(user_id): void
+    - awardBadge(user_id, badge_id): boolean
+  }
+  
+  class BadgeController {
+    - db: PDO
+    --
+    + handleRequest(): void
+    + getBadges(): array
+    + getUserBadges(user_id): array
+    + checkEligibility(user_id): array
+  }
+  
+  class ContactController {
+    - db: PDO
+    --
+    + handleRequest(): void
+    + submitContact(data): array
+    + getContacts(): array
+    - validateContactData(data): boolean
+    - sendEmailNotification(data): boolean
+  }
+}
+
+package "Database Layer" {
+  
+  class Database {
+    - host: string
+    - dbname: string
+    - username: string
+    - password: string
+    - connection: PDO
+    --
+    + connect(): PDO
+    + disconnect(): void
+    + executeQuery(sql, params): array
+    + execute(sql, params): boolean
+    + lastInsertId(): int
+  }
+}
+
+package "Models" {
+  
+  class UserModel {
+    + id: int
+    + name: string
+    + email: string
+    + role: string
+    --
+    + save(): boolean
+    + find(id): UserModel
+    + findByEmail(email): UserModel
+    + validate(): boolean
+  }
+  
+  class EventModel {
+    + id: int
+    + title: string
+    + date: datetime
+    + organizer_id: int
+    --
+    + save(): boolean
+    + find(id): EventModel
+    + findAll(): array
+    + delete(): boolean
+  }
+}
+
+' Relationships
+UserController --> Database : uses
+EventController --> Database : uses
+RegistrationController --> Database : uses
+MessageController --> Database : uses
+HourController --> Database : uses
+BadgeController --> Database : uses
+ContactController --> Database : uses
+
+UserController --> UserModel : creates
+EventController --> EventModel : creates
+
+HourController ..> BadgeController : triggers badge check
+
+@enduml
