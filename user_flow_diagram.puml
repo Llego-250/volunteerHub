@@ -1,0 +1,590 @@
+@startuml VolunteerHub_User_Flow
+' This PlantUML diagram is automatically generated and enhanced.
+' Comments below each action are incorporated into action labels.
+' Variables in {{name}} format are highlighted with bold/italic styling.
+'
+' For more information and usage instructions, see:
+' https://github.com/hzarsteck/puml-sd-multiline
+
+!define VOLUNTEER #E3F2FD
+!define ORGANIZER #FFF3E0
+!define COMMON #E8F5E9
+!define API #FCE4EC
+
+title VolunteerHub - Complete User Flow Diagram
+
+|Landing Page|
+start
+:User Arrives at Landing Page;
+:View Featured Events;
+
+if (User Action?) then (Login)
+  :Click Login Button;
+  |Authentication|
+  :Show Login Modal;
+  :Enter Credentials\n- Email\n- Password\n- Role Selection;
+  
+  if (Login Success?) then (yes)
+    if (Role?) then (Volunteer)
+      |Volunteer Dashboard|
+      :Redirect to Volunteer Dashboard;
+      #VOLUNTEER:Load Volunteer Features;
+    else (Organizer)
+      |Organizer Dashboard|
+      :Redirect to Organizer Dashboard;
+      #ORGANIZER:Load Organizer Features;
+    endif
+  else (no)
+    :Show Error Message;
+    stop
+  endif
+  
+else (Sign Up)
+  :Click Sign Up Button;
+  |Authentication|
+  :Show Signup Modal;
+  :Enter Details\n- Name\n- Email\n- Password\n- Role\n- Phone\n- Location;
+  
+  if (Validation Pass?) then (yes)
+    :Create Account (API);
+    if (Role?) then (Volunteer)
+      |Volunteer Dashboard|
+      :Redirect to Volunteer Dashboard;
+      #VOLUNTEER:Initialize Volunteer Account;
+    else (Organizer)
+      |Organizer Dashboard|
+      :Redirect to Organizer Dashboard;
+      #ORGANIZER:Initialize Organizer Account;
+    endif
+  else (no)
+    :Show Validation Error;
+    stop
+  endif
+  
+else (Browse)
+  :Browse Events Page;
+  :View Event Categories;
+  stop
+endif
+
+|Volunteer Dashboard|
+#VOLUNTEER:=== VOLUNTEER FLOW ===;
+:Display Dashboard Stats\n- Registered Events\n- Upcoming Events\n- Completed Events;
+
+partition "Volunteer Actions" {
+  fork
+    :Browse Available Events;
+    :Search & Filter;
+    :View Event Details;
+    if (Register?) then (yes)
+      :Check Event Capacity;
+      if (Spots Available?) then (yes)
+        :Register for Event (API);
+        :Update My Events;
+        :Show Success Message;
+      else (no)
+        :Show "Event Full" Message;
+      endif
+    endif
+  fork again
+    :View My Events;
+    :Filter (All/Upcoming/Past);
+    if (Unregister?) then (yes)
+      :Confirm Unregister;
+      :Remove Registration (API);
+      :Update Dashboard;
+    endif
+  fork again
+    :Check Notifications;
+    :View Messages from Organizers;
+    :Mark Messages as Read;
+  fork again
+    :View Hours & Badges;
+    :Check Volunteer Hours;
+    :View Achievement Badges;
+  fork again
+    :Manage Profile;
+    :Edit Profile Info;
+    :Save Changes (API);
+  end fork
+}
+
+|Organizer Dashboard|
+#ORGANIZER:=== ORGANIZER FLOW ===;
+:Display Dashboard Stats\n- Total Events\n- Total Volunteers\n- Active Events;
+
+partition "Organizer Actions" {
+  fork
+    :Create New Event;
+    :Fill Event Form\n- Title\n- Category\n- Date/Time\n- Location\n- Max Volunteers\n- Description;
+    if (Validate Date?) then (Future)
+      :Submit Event (API);
+      :Add to My Events;
+      :Show Success;
+    else (Past)
+      :Show Date Error;
+    endif
+  fork again
+    :View My Events;
+    :Filter Events;
+    if (Action?) then (Manage)
+      :View Event Details;
+      :Check Registration Status;
+    else if (View Volunteers)
+      :Load Volunteer List (API);
+      :Display Volunteer Info;
+      fork
+        :Call Volunteer;
+      fork again
+        :Email Volunteer;
+      fork again
+        :Send Message (API);
+      fork again
+        :Remove Volunteer (API);
+      end fork
+    else (Delete)
+      :Confirm Deletion;
+      :Delete Event (API);
+      :Update Dashboard;
+    endif
+  fork again
+    :Message Volunteers;
+    :Select Volunteer;
+    :Compose Message;
+    :Send Message (API);
+  fork again
+    :Manage Profile;
+    :Edit Profile Info;
+    :Save Changes (API);
+  end fork
+}
+
+|Common Actions|
+#COMMON:=== COMMON FEATURES ===;
+partition "Shared Features" {
+  :View Profile;
+  :Update Settings;
+  :Logout;
+  :Clear Session;
+  :Redirect to Landing;
+}
+
+stop
+
+@enduml
+
+@startuml Authentication_Flow
+' This PlantUML diagram is automatically generated and enhanced.
+' Comments below each action are incorporated into action labels.
+' Variables in {{name}} format are highlighted with bold/italic styling.
+'
+' For more information and usage instructions, see:
+' https://github.com/hzarsteck/puml-sd-multiline
+
+title Authentication Flow - Detailed
+
+start
+:User on Landing Page;
+
+if (Has Account?) then (yes)
+  :Click Login;
+  :Enter Email;
+  :Enter Password;
+  :Select Role (Volunteer/Organizer);
+  :Submit Form;
+  
+  :API: POST /api/users.php?action=login;
+  
+  if (Credentials Valid?) then (yes)
+    :Save User to localStorage;
+    :Update AppState;
+    if (Role = Volunteer?) then (yes)
+      :Redirect to\nvolunteer-dashboard.html;
+    else (no)
+      :Redirect to\norganizer-dashboard.html;
+    endif
+  else (no)
+    :Show Error:\n"Invalid credentials";
+    stop
+  endif
+else (no)
+  :Click Sign Up;
+  :Enter Full Name;
+  :Enter Email;
+  :Enter Password (min 6 chars);
+  :Select Role;
+  :Enter Phone;
+  :Enter Location;
+  :Submit Form;
+  
+  if (Validation Pass?) then (yes)
+    :API: POST /api/users.php?action=register;
+    
+    if (Registration Success?) then (yes)
+      :Create User Account;
+      :Save to localStorage;
+      :Update AppState;
+      if (Role = Volunteer?) then (yes)
+        :Redirect to\nvolunteer-dashboard.html;
+      else (no)
+        :Redirect to\norganizer-dashboard.html;
+      endif
+    else (no)
+      :Show Error:\n"Registration failed";
+      stop
+    endif
+  else (no)
+    :Show Validation Errors;
+    stop
+  endif
+endif
+
+stop
+@enduml
+
+@startuml Volunteer_Event_Registration
+' This PlantUML diagram is automatically generated and enhanced.
+' Comments below each action are incorporated into action labels.
+' Variables in {{name}} format are highlighted with bold/italic styling.
+'
+' For more information and usage instructions, see:
+' https://github.com/hzarsteck/puml-sd-multiline
+
+title Volunteer - Event Registration Flow
+
+start
+:Volunteer on Dashboard;
+:Navigate to Browse Events;
+
+:View Available Events;
+:Apply Filters (Optional)\n- Category\n- Search Term;
+
+:Click Event Card;
+:View Event Details Modal\n- Title, Description\n- Date, Time, Location\n- Organizer\n- Volunteer Count;
+
+if (Want to Register?) then (yes)
+  if (Event Full?) then (no)
+    if (Already Registered?) then (no)
+      :Click "Register Now";
+      :API: POST /api/events.php?action=register\n{eventId, volunteerId};
+      
+      if (API Success?) then (yes)
+        :Add to registeredEvents[];
+        :Increment volunteer count;
+        :Update localStorage;
+        :Refresh Dashboard Stats;
+        :Move to "My Events";
+        :Show Success Message;
+      else (no)
+        :Show Error Message;
+      endif
+    else (yes)
+      :Show "Already Registered";
+    endif
+  else (yes)
+    :Show "Event Full" Message;
+    :Disable Register Button;
+  endif
+else (no)
+  :Close Modal;
+endif
+
+stop
+@enduml
+
+@startuml Organizer_Event_Creation
+' This PlantUML diagram is automatically generated and enhanced.
+' Comments below each action are incorporated into action labels.
+' Variables in {{name}} format are highlighted with bold/italic styling.
+'
+' For more information and usage instructions, see:
+' https://github.com/hzarsteck/puml-sd-multiline
+
+title Organizer - Event Creation Flow
+
+start
+:Organizer on Dashboard;
+:Click "Create Event" Button;
+
+:Show Create Event Form;
+:Enter Event Title;
+:Select Category from Dropdown;
+:Set Event Date;
+:Set Event Time;
+:Enter Location;
+:Set Max Volunteers;
+:Enter Description;
+:Enter Requirements (Optional);
+
+:Click Submit;
+
+if (Date in Future?) then (yes)
+  if (All Required Fields?) then (yes)
+    :API: POST /api/events.php\n{title, category, date, time,\nlocation, maxVolunteers,\ndescription, requirements,\norganizerId};
+    
+    if (API Success?) then (yes)
+      :Create Event in Database;
+      :Assign Event ID;
+      :Add to Organizer's Events;
+      :Update Dashboard Stats;
+      :Hide Form;
+      :Show Success Message;
+      :Display in "My Events";
+    else (no)
+      :Show Error Message;
+    endif
+  else (no)
+    :Show Validation Errors;
+  endif
+else (no)
+  :Show Error:\n"Date must be in future";
+endif
+
+stop
+@enduml
+
+@startuml Organizer_Volunteer_Management
+' This PlantUML diagram is automatically generated and enhanced.
+' Comments below each action are incorporated into action labels.
+' Variables in {{name}} format are highlighted with bold/italic styling.
+'
+' For more information and usage instructions, see:
+' https://github.com/hzarsteck/puml-sd-multiline
+
+title Organizer - Volunteer Management Flow
+
+start
+:Organizer Views Event;
+:Click "View Volunteers" Button;
+
+:API: GET /api/events.php?event_id={id}&action=volunteers;
+
+if (Volunteers Exist?) then (yes)
+  :Display Volunteer List\n- Name\n- Email\n- Phone\n- Location;
+  
+  :Select Action;
+  
+  if (Action Type?) then (Call)
+    :Open Phone Dialer\ntel:{phone};
+  else if (Email)
+    :Open Email Client\nmailto:{email};
+  else if (Message)
+    :Show Message Form;
+    :Enter Message Text;
+    :API: POST /api/messages.php\n{fromUserId, toUserId, message};
+    if (Success?) then (yes)
+      :Show "Message Sent";
+    else (no)
+      :Show Error;
+    endif
+  else (Remove)
+    :Confirm Removal;
+    if (Confirmed?) then (yes)
+      :API: DELETE /api/events.php?action=unregister\n{event_id, volunteer_id};
+      :Update Volunteer Count;
+      :Refresh Volunteer List;
+      :Show "Volunteer Removed";
+    endif
+  endif
+else (no)
+  :Show Empty State\n"No volunteers registered yet";
+endif
+
+stop
+@enduml
+
+@startuml Messaging_System
+' This PlantUML diagram is automatically generated and enhanced.
+' Comments below each action are incorporated into action labels.
+' Variables in {{name}} format are highlighted with bold/italic styling.
+'
+' For more information and usage instructions, see:
+' https://github.com/hzarsteck/puml-sd-multiline
+
+title Messaging System Flow
+
+|Organizer|
+start
+:Click "Message Volunteers";
+:API: GET /api/registrations.php?organizer_id={id};
+:Display Volunteer List;
+:Select Volunteer;
+:Enter Message;
+:Click Send;
+:API: POST /api/messages.php\n{fromUserId, toUserId, message};
+
+|System|
+:Save Message to Database;
+:Set is_read = false;
+:Set sent_at = NOW();
+
+|Volunteer|
+:Login to Dashboard;
+:API: GET /api/messages.php?user_id={id};
+:Count Unread Messages;
+:Update Notification Badge;
+
+if (Click Notification Bell?) then (yes)
+  :Show Messages Modal;
+  :Display Messages\n- From (Organizer)\n- Date/Time\n- Content\n- Read Status;
+  
+  if (Click Message?) then (yes)
+    :Expand Message;
+    :API: PUT /api/messages.php\n{messageId};
+    :Mark as Read;
+    :Update Badge Count;
+  endif
+endif
+
+stop
+@enduml
+
+@startuml API_Data_Flow
+' This PlantUML diagram is automatically generated and enhanced.
+' Comments below each action are incorporated into action labels.
+' Variables in {{name}} format are highlighted with bold/italic styling.
+'
+' For more information and usage instructions, see:
+' https://github.com/hzarsteck/puml-sd-multiline
+
+title API Data Flow Architecture
+
+package "Frontend" {
+  [Landing Page] as LP
+  [Volunteer Dashboard] as VD
+  [Organizer Dashboard] as OD
+  [Auth Modal] as AM
+}
+
+package "Backend API" {
+  [users.php] as UP
+  [events.php] as EP
+  [messages.php] as MP
+  [registrations.php] as RP
+  [hours.php] as HP
+  [badges.php] as BP
+}
+
+database "MySQL Database" {
+  [users] as UT
+  [events] as ET
+  [event_registrations] as ERT
+  [messages] as MT
+  [volunteer_hours] as VHT
+  [badges] as BT
+  [user_badges] as UBT
+}
+
+LP --> AM : Login/Signup
+AM --> UP : POST register/login
+UP --> UT : CRUD Operations
+
+VD --> EP : GET events
+VD --> EP : POST register
+VD --> MP : GET messages
+VD --> HP : GET hours
+VD --> BP : GET badges
+
+OD --> EP : POST create event
+OD --> EP : GET organizer events
+OD --> EP : DELETE event
+OD --> RP : GET volunteers
+OD --> MP : POST send message
+
+EP --> ET : Event CRUD
+EP --> ERT : Registration CRUD
+MP --> MT : Message CRUD
+RP --> ERT : Query Registrations
+HP --> VHT : Query Hours
+BP --> BT : Query Badges
+BP --> UBT : Query User Badges
+
+note right of UP
+  Authentication APIs:
+  - POST ?action=register
+  - POST ?action=login
+end note
+
+note right of EP
+  Event APIs:
+  - GET (all events)
+  - GET ?organizer_id={id}
+  - GET ?volunteer_id={id}
+  - POST (create)
+  - DELETE ?id={id}
+  - POST ?action=register
+  - DELETE ?action=unregister
+end note
+
+note right of MP
+  Message APIs:
+  - GET ?user_id={id}
+  - POST (send message)
+  - PUT (mark as read)
+end note
+
+@enduml
+
+@startuml State_Management
+' This PlantUML diagram is automatically generated and enhanced.
+' Comments below each action are incorporated into action labels.
+' Variables in {{name}} format are highlighted with bold/italic styling.
+'
+' For more information and usage instructions, see:
+' https://github.com/hzarsteck/puml-sd-multiline
+
+title Application State Management
+
+object AppState {
+  currentUser: Object
+  events: Array
+  organizerEvents: Array
+  categories: Array
+}
+
+object currentUser {
+  id: Integer
+  name: String
+  email: String
+  role: String
+  phone: String
+  location: String
+  registeredEvents: Array
+}
+
+object localStorage {
+  volunteerHubUser
+  volunteerHubEvents
+  volunteerHubUsers
+}
+
+object sessionStorage {
+  showProfile: Boolean
+  showSettings: Boolean
+}
+
+AppState *-- currentUser
+AppState --> localStorage : save/load
+AppState --> sessionStorage : flags
+
+note right of AppState
+  Global application state
+  Initialized on page load
+  Updated on user actions
+end note
+
+note right of localStorage
+  Persistent storage
+  Survives page refresh
+  Used for auto-login
+end note
+
+note right of sessionStorage
+  Temporary storage
+  Cleared on tab close
+  Used for UI flags
+end note
+
+@enduml
+
+@enduml
