@@ -1,0 +1,312 @@
+@startuml VolunteerHub_Main_Flow
+title VolunteerHub - Main User Flow
+
+start
+:User Arrives at Landing Page;
+:View Featured Events;
+
+if (User Action?) then (Login)
+  :Click Login Button;
+  :Show Login Modal;
+  :Enter Email, Password, Role;
+  
+  if (Login Success?) then (yes)
+    if (Role = Volunteer?) then (yes)
+      :Redirect to Volunteer Dashboard;
+    else (no)
+      :Redirect to Organizer Dashboard;
+    endif
+  else (no)
+    :Show Error Message;
+    stop
+  endif
+  
+else (Sign Up)
+  :Click Sign Up Button;
+  :Show Signup Modal;
+  :Enter Name, Email, Password, Role, Phone, Location;
+  
+  if (Validation Pass?) then (yes)
+    :Create Account via API;
+    if (Role = Volunteer?) then (yes)
+      :Redirect to Volunteer Dashboard;
+    else (no)
+      :Redirect to Organizer Dashboard;
+    endif
+  else (no)
+    :Show Validation Error;
+    stop
+  endif
+  
+else (Browse)
+  :Browse Events Page;
+  stop
+endif
+
+stop
+@enduml
+
+@startuml Authentication_Flow
+title Authentication Flow
+
+start
+:User on Landing Page;
+
+if (Has Account?) then (yes)
+  :Click Login;
+  :Enter Email;
+  :Enter Password;
+  :Select Role;
+  :Submit Form;
+  :API: POST /api/users.php?action=login;
+  
+  if (Credentials Valid?) then (yes)
+    :Save User to localStorage;
+    :Update AppState;
+    if (Role = Volunteer?) then (yes)
+      :Redirect to volunteer-dashboard.html;
+    else (no)
+      :Redirect to organizer-dashboard.html;
+    endif
+  else (no)
+    :Show Error: Invalid credentials;
+    stop
+  endif
+else (no)
+  :Click Sign Up;
+  :Enter Full Name;
+  :Enter Email;
+  :Enter Password;
+  :Select Role;
+  :Enter Phone;
+  :Enter Location;
+  :Submit Form;
+  
+  if (Validation Pass?) then (yes)
+    :API: POST /api/users.php?action=register;
+    
+    if (Registration Success?) then (yes)
+      :Create User Account;
+      :Save to localStorage;
+      if (Role = Volunteer?) then (yes)
+        :Redirect to volunteer-dashboard.html;
+      else (no)
+        :Redirect to organizer-dashboard.html;
+      endif
+    else (no)
+      :Show Error: Registration failed;
+      stop
+    endif
+  else (no)
+    :Show Validation Errors;
+    stop
+  endif
+endif
+
+stop
+@enduml
+
+@startuml Volunteer_Registration
+title Volunteer - Event Registration Flow
+
+start
+:Volunteer on Dashboard;
+:Navigate to Browse Events;
+:View Available Events;
+:Apply Filters (Optional);
+
+:Click Event Card;
+:View Event Details Modal;
+
+if (Want to Register?) then (yes)
+  if (Event Full?) then (no)
+    if (Already Registered?) then (no)
+      :Click Register Now;
+      :API: POST /api/events.php?action=register;
+      
+      if (API Success?) then (yes)
+        :Add to registeredEvents;
+        :Increment volunteer count;
+        :Update localStorage;
+        :Refresh Dashboard Stats;
+        :Move to My Events;
+        :Show Success Message;
+      else (no)
+        :Show Error Message;
+      endif
+    else (yes)
+      :Show Already Registered;
+    endif
+  else (yes)
+    :Show Event Full Message;
+  endif
+else (no)
+  :Close Modal;
+endif
+
+stop
+@enduml
+
+@startuml Organizer_Create_Event
+title Organizer - Event Creation Flow
+
+start
+:Organizer on Dashboard;
+:Click Create Event Button;
+:Show Create Event Form;
+
+:Enter Event Title;
+:Select Category;
+:Set Event Date;
+:Set Event Time;
+:Enter Location;
+:Set Max Volunteers;
+:Enter Description;
+:Enter Requirements;
+
+:Click Submit;
+
+if (Date in Future?) then (yes)
+  if (All Required Fields?) then (yes)
+    :API: POST /api/events.php;
+    
+    if (API Success?) then (yes)
+      :Create Event in Database;
+      :Add to Organizer Events;
+      :Update Dashboard Stats;
+      :Hide Form;
+      :Show Success Message;
+    else (no)
+      :Show Error Message;
+    endif
+  else (no)
+    :Show Validation Errors;
+  endif
+else (no)
+  :Show Error: Date must be in future;
+endif
+
+stop
+@enduml
+
+@startuml Volunteer_Management
+title Organizer - Volunteer Management Flow
+
+start
+:Organizer Views Event;
+:Click View Volunteers Button;
+:API: GET /api/events.php?event_id={id}&action=volunteers;
+
+if (Volunteers Exist?) then (yes)
+  :Display Volunteer List;
+  :Select Action;
+  
+  if (Action Type?) then (Call)
+    :Open Phone Dialer;
+  else if (Email) then
+    :Open Email Client;
+  else if (Message) then
+    :Show Message Form;
+    :Enter Message Text;
+    :API: POST /api/messages.php;
+    if (Success?) then (yes)
+      :Show Message Sent;
+    else (no)
+      :Show Error;
+    endif
+  else (Remove)
+    :Confirm Removal;
+    if (Confirmed?) then (yes)
+      :API: DELETE /api/events.php?action=unregister;
+      :Update Volunteer Count;
+      :Refresh Volunteer List;
+      :Show Volunteer Removed;
+    endif
+  endif
+else (no)
+  :Show Empty State;
+endif
+
+stop
+@enduml
+
+@startuml Messaging_System
+title Messaging System Flow
+
+start
+:Organizer Clicks Message Volunteers;
+:API: GET /api/registrations.php?organizer_id={id};
+:Display Volunteer List;
+:Select Volunteer;
+:Enter Message;
+:Click Send;
+:API: POST /api/messages.php;
+:Save Message to Database;
+
+:Volunteer Logs In;
+:API: GET /api/messages.php?user_id={id};
+:Count Unread Messages;
+:Update Notification Badge;
+
+if (Click Notification Bell?) then (yes)
+  :Show Messages Modal;
+  :Display Messages;
+  
+  if (Click Message?) then (yes)
+    :Expand Message;
+    :API: PUT /api/messages.php;
+    :Mark as Read;
+    :Update Badge Count;
+  endif
+endif
+
+stop
+@enduml
+
+@startuml System_Architecture
+title System Architecture
+
+package "Frontend" {
+  [Landing Page]
+  [Volunteer Dashboard]
+  [Organizer Dashboard]
+  [Auth Modal]
+}
+
+package "Backend API" {
+  [users.php]
+  [events.php]
+  [messages.php]
+  [registrations.php]
+  [hours.php]
+  [badges.php]
+}
+
+database "MySQL" {
+  [users]
+  [events]
+  [event_registrations]
+  [messages]
+  [volunteer_hours]
+  [badges]
+  [user_badges]
+}
+
+[Landing Page] --> [Auth Modal]
+[Auth Modal] --> [users.php]
+[Volunteer Dashboard] --> [events.php]
+[Volunteer Dashboard] --> [messages.php]
+[Organizer Dashboard] --> [events.php]
+[Organizer Dashboard] --> [registrations.php]
+[Organizer Dashboard] --> [messages.php]
+
+[users.php] --> [users]
+[events.php] --> [events]
+[events.php] --> [event_registrations]
+[messages.php] --> [messages]
+[registrations.php] --> [event_registrations]
+[hours.php] --> [volunteer_hours]
+[badges.php] --> [badges]
+[badges.php] --> [user_badges]
+
+@enduml
