@@ -1,359 +1,344 @@
-@startuml CompleteUserFlow
+@startuml
 title VolunteerHub - Complete User Flow
 
-|User|
-start
-:Visit Landing Page;
-:View Featured Events;
+actor User
+participant "Landing Page" as LP
+participant "Auth System" as Auth
+participant "API" as API
+database "Database" as DB
+participant "Volunteer Dashboard" as VD
+participant "Organizer Dashboard" as OD
 
-|User|
-if (Action?) then (Login)
-  :Click Login Button;
-  :Enter Email;
-  :Enter Password;
-  :Select Role;
-  |System|
-  :Validate Credentials;
-  |System|
-  if (Valid?) then (yes)
-    if (Role?) then (Volunteer)
-      |Volunteer|
-      :Load Volunteer Dashboard;
-      :View My Events;
-      :Browse Available Events;
-      :Register for Events;
-    else (Organizer)
-      |Organizer|
-      :Load Organizer Dashboard;
-      :View My Events;
-      :Create New Events;
-      :Manage Volunteers;
-    endif
-  else (no)
-    |User|
-    :Show Error Message;
-    stop
-  endif
-elseif (Signup) then
-  :Click Signup Button;
-  :Enter Name;
-  :Enter Email;
-  :Enter Password;
-  :Select Role;
-  :Enter Phone;
-  :Enter Location;
-  |System|
-  :Create Account;
-  |System|
-  if (Success?) then (yes)
-    if (Role?) then (Volunteer)
-      |Volunteer|
-      :Load Volunteer Dashboard;
-    else (Organizer)
-      |Organizer|
-      :Load Organizer Dashboard;
-    endif
-  else (no)
-    |User|
-    :Show Error;
-    stop
-  endif
-else (Browse)
-  :Browse Events;
-  :View Categories;
-  stop
-endif
+User -> LP: Visit Website
+LP -> User: Show Featured Events
 
-stop
-@enduml
-
-@startuml VolunteerFlow
-title Volunteer User Flow
-
-|Volunteer|
-start
-:Login to Dashboard;
-:View Dashboard Stats;
-
-fork
-  :My Events Section;
-  :View Registered Events;
-  :Filter Events;
-  :Unregister from Event;
-fork again
-  :Browse Events Section;
-  :Search Events;
-  :Filter by Category;
-  :View Event Details;
-  :Register for Event;
-fork again
-  :Notifications;
-  :Check Messages;
-  :Read Messages from Organizers;
-  :Mark as Read;
-fork again
-  :Profile;
-  :View Hours and Badges;
-  :Edit Profile;
-  :Update Settings;
-end fork
-
-stop
-@enduml
-
-@startuml OrganizerFlow
-title Organizer User Flow
-
-|Organizer|
-start
-:Login to Dashboard;
-:View Dashboard Stats;
-
-fork
-  :My Events Section;
-  :View Created Events;
-  :Filter Events;
-  :Manage Event;
-  :View Event Details;
-fork again
-  :Create Event;
-  :Fill Event Form;
-  :Set Date and Time;
-  :Set Max Volunteers;
-  :Submit Event;
-fork again
-  :Volunteer Management;
-  :View Registered Volunteers;
-  :Contact Volunteers;
-  :Send Messages;
-  :Remove Volunteers;
-fork again
-  :Profile;
-  :Edit Profile;
-  :Update Settings;
-end fork
-
-stop
-@enduml
-
-@startuml EventRegistrationFlow
-title Event Registration Flow
-
-|Volunteer|
-start
-:Browse Available Events;
-:Apply Search Filter;
-:Apply Category Filter;
-:Click Event Card;
-
-|System|
-:Load Event Details;
-:Display Event Info;
-:Show Volunteer Count;
-
-|Volunteer|
-:Review Event Details;
-
-if (Want to Register?) then (yes)
-  |System|
-  if (Event Full?) then (no)
-    if (Already Registered?) then (no)
-      :Call Register API;
-      :Add to Registered Events;
-      :Increment Volunteer Count;
-      :Update Database;
-      |Volunteer|
-      :Show Success Message;
-      :Event Appears in My Events;
-      :Dashboard Stats Updated;
-    else (yes)
-      :Show Already Registered;
-    endif
-  else (yes)
-    :Show Event Full Message;
-  endif
-else (no)
-  :Close Modal;
-endif
-
-stop
-@enduml
-
-@startuml EventCreationFlow
-title Event Creation Flow
-
-|Organizer|
-start
-:Click Create Event Button;
-:Show Event Form;
-:Enter Event Title;
-:Select Category;
-:Set Event Date;
-:Set Event Time;
-:Enter Location;
-:Set Max Volunteers;
-:Enter Description;
-:Enter Requirements;
-:Click Submit;
-
-|System|
-:Validate Form Data;
-
-if (Date in Future?) then (yes)
-  if (All Fields Valid?) then (yes)
-    :Call Create Event API;
-    :Save to Database;
-    :Generate Event ID;
-    |Organizer|
-    :Show Success Message;
-    :Event Added to My Events;
-    :Dashboard Stats Updated;
-    :Hide Form;
-  else (no)
-    :Show Validation Errors;
-    stop
-  endif
-else (no)
-  :Show Date Error;
-  stop
-endif
-
-stop
-@enduml
-
-@startuml MessagingFlow
-title Messaging Flow
-
-|Organizer|
-start
-:Click Message Volunteers;
-:Load Volunteer List;
-:Select Volunteer;
-:Enter Message Text;
-:Click Send;
-
-|System|
-:Call Message API;
-:Save to Database;
-:Set Unread Status;
-:Set Timestamp;
-
-|Volunteer|
-:Login to Dashboard;
-:Load Messages;
-:Count Unread Messages;
-:Update Notification Badge;
-:Click Notification Bell;
-:View Messages List;
-:Click Message;
-
-|System|
-:Expand Message;
-:Call Mark Read API;
-:Update Read Status;
-
-|Volunteer|
-:Badge Count Updated;
-
-stop
-@enduml
-
-@startuml VolunteerManagementFlow
-title Volunteer Management Flow
-
-|Organizer|
-start
-:View Event Card;
-:Click View Volunteers;
-
-|System|
-:Call Get Volunteers API;
-:Load Volunteer List;
-
-|Organizer|
-if (Has Volunteers?) then (yes)
-  :Display Volunteer List;
-  :View Volunteer Details;
-  
-  if (Action?) then (Call)
-    :Open Phone Dialer;
-    stop
-  elseif (Email) then
-    :Open Email Client;
-    stop
-  elseif (Message) then
-    :Open Message Form;
-    :Enter Message;
-    |System|
-    :Send Message API;
-    |Organizer|
-    :Show Success;
-    stop
-  else (Remove)
-    :Confirm Removal;
-    |System|
-    :Call Unregister API;
-    :Update Volunteer Count;
-    :Refresh List;
-    |Organizer|
-    :Show Removed Message;
-    stop
-  endif
-else (no)
-  :Show Empty State;
-  stop
-endif
+alt Login
+    User -> Auth: Click Login
+    User -> Auth: Enter Email, Password, Role
+    Auth -> API: POST /api/users.php?action=login
+    API -> DB: Validate Credentials
+    DB -> API: User Data
+    
+    alt Role = Volunteer
+        API -> VD: Redirect
+        VD -> User: Show Volunteer Dashboard
+    else Role = Organizer
+        API -> OD: Redirect
+        OD -> User: Show Organizer Dashboard
+    end
+    
+else Signup
+    User -> Auth: Click Signup
+    User -> Auth: Enter Details
+    Auth -> API: POST /api/users.php?action=register
+    API -> DB: Create Account
+    DB -> API: Success
+    
+    alt Role = Volunteer
+        API -> VD: Redirect
+        VD -> User: Show Volunteer Dashboard
+    else Role = Organizer
+        API -> OD: Redirect
+        OD -> User: Show Organizer Dashboard
+    end
+end
 
 @enduml
 
-@startuml SystemArchitecture
+@startuml
+title Volunteer - Event Registration Flow
+
+actor Volunteer
+participant "Dashboard" as VD
+participant "Events API" as API
+database "Database" as DB
+
+Volunteer -> VD: Browse Events
+VD -> API: GET /api/events.php
+API -> DB: Fetch Events
+DB -> API: Events List
+API -> VD: Display Events
+VD -> Volunteer: Show Available Events
+
+Volunteer -> VD: Search/Filter Events
+Volunteer -> VD: Click Event Card
+VD -> Volunteer: Show Event Details Modal
+
+Volunteer -> VD: Click Register
+VD -> API: POST /api/events.php?action=register
+API -> DB: Check Availability
+alt Event Available
+    DB -> API: Success
+    API -> DB: Add Registration
+    API -> DB: Increment Volunteer Count
+    DB -> API: Updated
+    API -> VD: Registration Success
+    VD -> Volunteer: Show Success Message
+    VD -> Volunteer: Update My Events
+else Event Full
+    DB -> API: Full
+    API -> VD: Event Full
+    VD -> Volunteer: Show Full Message
+end
+
+@enduml
+
+@startuml
+title Organizer - Event Creation Flow
+
+actor Organizer
+participant "Dashboard" as OD
+participant "Events API" as API
+database "Database" as DB
+
+Organizer -> OD: Click Create Event
+OD -> Organizer: Show Event Form
+
+Organizer -> OD: Enter Title
+Organizer -> OD: Select Category
+Organizer -> OD: Set Date & Time
+Organizer -> OD: Enter Location
+Organizer -> OD: Set Max Volunteers
+Organizer -> OD: Enter Description
+Organizer -> OD: Click Submit
+
+OD -> API: POST /api/events.php
+API -> API: Validate Date (Future)
+
+alt Valid Date
+    API -> DB: INSERT Event
+    DB -> API: Event ID
+    API -> OD: Success
+    OD -> Organizer: Show Success Message
+    OD -> Organizer: Display in My Events
+else Invalid Date
+    API -> OD: Date Error
+    OD -> Organizer: Show Error Message
+end
+
+@enduml
+
+@startuml
+title Organizer - Volunteer Management Flow
+
+actor Organizer
+participant "Dashboard" as OD
+participant "Events API" as API
+database "Database" as DB
+
+Organizer -> OD: View Event
+Organizer -> OD: Click View Volunteers
+OD -> API: GET /api/events.php?event_id={id}&action=volunteers
+API -> DB: Fetch Volunteers
+DB -> API: Volunteer List
+API -> OD: Display List
+
+alt Has Volunteers
+    OD -> Organizer: Show Volunteer Cards
+    
+    alt Action: Call
+        Organizer -> OD: Click Call
+        OD -> Organizer: Open Phone Dialer
+    else Action: Email
+        Organizer -> OD: Click Email
+        OD -> Organizer: Open Email Client
+    else Action: Message
+        Organizer -> OD: Click Message
+        OD -> Organizer: Show Message Form
+        Organizer -> OD: Enter Message
+        OD -> API: POST /api/messages.php
+        API -> DB: Save Message
+        DB -> API: Success
+        API -> OD: Message Sent
+        OD -> Organizer: Show Success
+    else Action: Remove
+        Organizer -> OD: Click Remove
+        OD -> Organizer: Confirm Removal
+        Organizer -> OD: Confirm
+        OD -> API: DELETE /api/events.php?action=unregister
+        API -> DB: Remove Registration
+        API -> DB: Decrement Count
+        DB -> API: Success
+        API -> OD: Updated
+        OD -> Organizer: Show Removed Message
+    end
+else No Volunteers
+    OD -> Organizer: Show Empty State
+end
+
+@enduml
+
+@startuml
+title Messaging System Flow
+
+actor Organizer
+participant "Organizer Dashboard" as OD
+participant "Messages API" as MAPI
+database "Database" as DB
+participant "Volunteer Dashboard" as VD
+actor Volunteer
+
+== Organizer Sends Message ==
+Organizer -> OD: Click Message Volunteers
+OD -> MAPI: GET /api/registrations.php?organizer_id={id}
+MAPI -> DB: Fetch Volunteers
+DB -> MAPI: Volunteer List
+MAPI -> OD: Display List
+OD -> Organizer: Show Volunteers
+
+Organizer -> OD: Select Volunteer
+Organizer -> OD: Enter Message
+Organizer -> OD: Click Send
+OD -> MAPI: POST /api/messages.php
+MAPI -> DB: INSERT Message (is_read=false)
+DB -> MAPI: Success
+MAPI -> OD: Message Sent
+OD -> Organizer: Show Success
+
+== Volunteer Receives Message ==
+Volunteer -> VD: Login to Dashboard
+VD -> MAPI: GET /api/messages.php?user_id={id}
+MAPI -> DB: Fetch Messages
+DB -> MAPI: Messages List
+MAPI -> VD: Count Unread
+VD -> Volunteer: Update Badge (Unread Count)
+
+Volunteer -> VD: Click Notification Bell
+VD -> Volunteer: Show Messages Modal
+
+Volunteer -> VD: Click Message
+VD -> MAPI: PUT /api/messages.php (Mark Read)
+MAPI -> DB: UPDATE is_read=true
+DB -> MAPI: Success
+MAPI -> VD: Updated
+VD -> Volunteer: Update Badge Count
+
+@enduml
+
+@startuml
 title System Architecture
 
-package "Frontend Layer" {
-  [Landing Page]
-  [Volunteer Dashboard]
-  [Organizer Dashboard]
-  [Auth Components]
+package "Frontend" {
+    component [Landing Page] as LP
+    component [Volunteer Dashboard] as VD
+    component [Organizer Dashboard] as OD
+    component [Auth Components] as Auth
 }
 
-package "API Layer" {
-  [users.php]
-  [events.php]
-  [messages.php]
-  [registrations.php]
-  [hours.php]
-  [badges.php]
+package "Backend API" {
+    component [users.php] as UP
+    component [events.php] as EP
+    component [messages.php] as MP
+    component [registrations.php] as RP
+    component [hours.php] as HP
+    component [badges.php] as BP
 }
 
-package "Database Layer" {
-  database "MySQL" {
-    [users]
-    [events]
-    [event_registrations]
-    [messages]
-    [volunteer_hours]
-    [badges]
-    [user_badges]
-  }
+database "MySQL Database" {
+    storage [users]
+    storage [events]
+    storage [event_registrations]
+    storage [messages]
+    storage [volunteer_hours]
+    storage [badges]
+    storage [user_badges]
 }
 
-[Landing Page] --> [Auth Components]
-[Auth Components] --> [users.php]
-[Volunteer Dashboard] --> [events.php]
-[Volunteer Dashboard] --> [messages.php]
-[Volunteer Dashboard] --> [hours.php]
-[Volunteer Dashboard] --> [badges.php]
-[Organizer Dashboard] --> [events.php]
-[Organizer Dashboard] --> [messages.php]
-[Organizer Dashboard] --> [registrations.php]
+LP --> Auth
+Auth --> UP
+VD --> EP
+VD --> MP
+VD --> HP
+VD --> BP
+OD --> EP
+OD --> MP
+OD --> RP
 
-[users.php] --> [users]
-[events.php] --> [events]
-[events.php] --> [event_registrations]
-[messages.php] --> [messages]
-[registrations.php] --> [event_registrations]
-[hours.php] --> [volunteer_hours]
-[badges.php] --> [badges]
-[badges.php] --> [user_badges]
+UP --> [users]
+EP --> [events]
+EP --> [event_registrations]
+MP --> [messages]
+RP --> [event_registrations]
+HP --> [volunteer_hours]
+BP --> [badges]
+BP --> [user_badges]
 
+@enduml
+
+@startuml
+title Volunteer Dashboard Flow
+
+start
+:Login as Volunteer;
+:Load Dashboard;
+
+partition "Dashboard Sections" {
+    :Display Stats;
+    note right
+        - Total Registered Events
+        - Upcoming Events
+        - Completed Events
+    end note
+    
+    fork
+        :My Events;
+        :View Registered Events;
+        :Filter Events;
+        :Unregister Option;
+    fork again
+        :Browse Events;
+        :Search Events;
+        :Filter by Category;
+        :Register for Events;
+    fork again
+        :Notifications;
+        :View Messages;
+        :Mark as Read;
+    fork again
+        :Hours & Badges;
+        :View Volunteer Hours;
+        :View Achievements;
+    end fork
+}
+
+stop
+@enduml
+
+@startuml
+title Organizer Dashboard Flow
+
+start
+:Login as Organizer;
+:Load Dashboard;
+
+partition "Dashboard Sections" {
+    :Display Stats;
+    note right
+        - Total Events Created
+        - Total Volunteers
+        - Active Events
+    end note
+    
+    fork
+        :My Events;
+        :View Created Events;
+        :Filter Events;
+        :Manage Events;
+    fork again
+        :Create Event;
+        :Fill Event Form;
+        :Submit Event;
+    fork again
+        :Volunteer Management;
+        :View Volunteers;
+        :Contact Volunteers;
+        :Remove Volunteers;
+    fork again
+        :Messaging;
+        :Select Volunteer;
+        :Send Message;
+    end fork
+}
+
+stop
 @enduml
