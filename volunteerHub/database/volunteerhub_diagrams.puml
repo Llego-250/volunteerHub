@@ -1,4 +1,11 @@
 @startuml VolunteerHub_Sequence_Diagram_User_Registration
+' This PlantUML diagram is automatically generated and enhanced.
+' Comments below each action are incorporated into action labels.
+' Variables in {{name}} format are highlighted with bold/italic styling.
+'
+' For more information and usage instructions, see:
+' https://github.com/hzarsteck/puml-sd-multiline
+
 title Sequence Diagram: User Registration and Event Sign-up
 
 actor Volunteer
@@ -24,6 +31,13 @@ Browser --> Volunteer: Display volunteer dashboard
 @enduml
 
 @startuml VolunteerHub_Sequence_Diagram_Event_Registration
+' This PlantUML diagram is automatically generated and enhanced.
+' Comments below each action are incorporated into action labels.
+' Variables in {{name}} format are highlighted with bold/italic styling.
+'
+' For more information and usage instructions, see:
+' https://github.com/hzarsteck/puml-sd-multiline
+
 title Sequence Diagram: Volunteer Event Registration
 
 actor Volunteer
@@ -57,6 +71,13 @@ Browser --> Volunteer: Display updated UI
 @enduml
 
 @startuml VolunteerHub_Sequence_Diagram_Messaging
+' This PlantUML diagram is automatically generated and enhanced.
+' Comments below each action are incorporated into action labels.
+' Variables in {{name}} format are highlighted with bold/italic styling.
+'
+' For more information and usage instructions, see:
+' https://github.com/hzarsteck/puml-sd-multiline
+
 title Sequence Diagram: User Messaging System
 
 actor User1 as "User (Sender)"
@@ -93,6 +114,13 @@ end note
 @enduml
 
 @startuml VolunteerHub_Sequence_Diagram_Hour_Logging
+' This PlantUML diagram is automatically generated and enhanced.
+' Comments below each action are incorporated into action labels.
+' Variables in {{name}} format are highlighted with bold/italic styling.
+'
+' For more information and usage instructions, see:
+' https://github.com/hzarsteck/puml-sd-multiline
+
 title Sequence Diagram: Volunteer Hour Logging and Approval
 
 actor Volunteer
@@ -139,6 +167,13 @@ Browser --> Organizer: Show approved status
 @enduml
 
 @startuml VolunteerHub_UseCase_Diagram
+' This PlantUML diagram is automatically generated and enhanced.
+' Comments below each action are incorporated into action labels.
+' Variables in {{name}} format are highlighted with bold/italic styling.
+'
+' For more information and usage instructions, see:
+' https://github.com/hzarsteck/puml-sd-multiline
+
 title Use Case Diagram: VolunteerHub Platform
 
 left to right direction
@@ -249,6 +284,13 @@ UC25 ..> UC24 : <<extend>>
 @enduml
 
 @startuml VolunteerHub_Activity_Diagram_Event_Creation
+' This PlantUML diagram is automatically generated and enhanced.
+' Comments below each action are incorporated into action labels.
+' Variables in {{name}} format are highlighted with bold/italic styling.
+'
+' For more information and usage instructions, see:
+' https://github.com/hzarsteck/puml-sd-multiline
+
 title Activity Diagram: Event Creation Process
 
 start
@@ -320,6 +362,13 @@ endif
 @enduml
 
 @startuml VolunteerHub_Activity_Diagram_Volunteer_Registration
+' This PlantUML diagram is automatically generated and enhanced.
+' Comments below each action are incorporated into action labels.
+' Variables in {{name}} format are highlighted with bold/italic styling.
+'
+' For more information and usage instructions, see:
+' https://github.com/hzarsteck/puml-sd-multiline
+
 title Activity Diagram: Volunteer Event Registration Workflow
 
 |Volunteer|
@@ -389,6 +438,13 @@ endif
 @enduml
 
 @startuml VolunteerHub_Activity_Diagram_Hour_Approval
+' This PlantUML diagram is automatically generated and enhanced.
+' Comments below each action are incorporated into action labels.
+' Variables in {{name}} format are highlighted with bold/italic styling.
+'
+' For more information and usage instructions, see:
+' https://github.com/hzarsteck/puml-sd-multiline
+
 title Activity Diagram: Volunteer Hour Approval Process
 
 |Volunteer|
@@ -476,6 +532,13 @@ endif
 @enduml
 
 @startuml VolunteerHub_Class_Diagram
+' This PlantUML diagram is automatically generated and enhanced.
+' Comments below each action are incorporated into action labels.
+' Variables in {{name}} format are highlighted with bold/italic styling.
+'
+' For more information and usage instructions, see:
+' https://github.com/hzarsteck/puml-sd-multiline
+
 title Class Diagram: VolunteerHub System
 
 class User {
@@ -643,6 +706,13 @@ end note
 @enduml
 
 @startuml VolunteerHub_Class_Diagram_Detailed_API
+' This PlantUML diagram is automatically generated and enhanced.
+' Comments below each action are incorporated into action labels.
+' Variables in {{name}} format are highlighted with bold/italic styling.
+'
+' For more information and usage instructions, see:
+' https://github.com/hzarsteck/puml-sd-multiline
+
 title Detailed Class Diagram: API Layer
 
 package "API Controllers" {
