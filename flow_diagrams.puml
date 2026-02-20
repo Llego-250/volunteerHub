@@ -15,7 +15,7 @@ LP -> User: Show Featured Events
 alt Login
     User -> Auth: Click Login
     User -> Auth: Enter Email, Password, Role
-    Auth -> API: POST /api/users.php?action=login
+    Auth -> API: POST /api/users.java?action=login
     API -> DB: Validate Credentials
     DB -> API: User Data
     
@@ -30,7 +30,7 @@ alt Login
 else Signup
     User -> Auth: Click Signup
     User -> Auth: Enter Details
-    Auth -> API: POST /api/users.php?action=register
+    Auth -> API: POST /api/users.java?action=register
     API -> DB: Create Account
     DB -> API: Success
     
@@ -54,7 +54,7 @@ participant "Events API" as API
 database "Database" as DB
 
 Volunteer -> VD: Browse Events
-VD -> API: GET /api/events.php
+VD -> API: GET /api/events.java
 API -> DB: Fetch Events
 DB -> API: Events List
 API -> VD: Display Events
@@ -65,7 +65,7 @@ Volunteer -> VD: Click Event Card
 VD -> Volunteer: Show Event Details Modal
 
 Volunteer -> VD: Click Register
-VD -> API: POST /api/events.php?action=register
+VD -> API: POST /api/events.java?action=register
 API -> DB: Check Availability
 alt Event Available
     DB -> API: Success
@@ -102,7 +102,7 @@ Organizer -> OD: Set Max Volunteers
 Organizer -> OD: Enter Description
 Organizer -> OD: Click Submit
 
-OD -> API: POST /api/events.php
+OD -> API: POST /api/events.java
 API -> API: Validate Date (Future)
 
 alt Valid Date
@@ -128,7 +128,7 @@ database "Database" as DB
 
 Organizer -> OD: View Event
 Organizer -> OD: Click View Volunteers
-OD -> API: GET /api/events.php?event_id={id}&action=volunteers
+OD -> API: GET /api/events.java?event_id={id}&action=volunteers
 API -> DB: Fetch Volunteers
 DB -> API: Volunteer List
 API -> OD: Display List
@@ -146,7 +146,7 @@ alt Has Volunteers
         Organizer -> OD: Click Message
         OD -> Organizer: Show Message Form
         Organizer -> OD: Enter Message
-        OD -> API: POST /api/messages.php
+        OD -> API: POST /api/messages.java
         API -> DB: Save Message
         DB -> API: Success
         API -> OD: Message Sent
@@ -155,7 +155,7 @@ alt Has Volunteers
         Organizer -> OD: Click Remove
         OD -> Organizer: Confirm Removal
         Organizer -> OD: Confirm
-        OD -> API: DELETE /api/events.php?action=unregister
+        OD -> API: DELETE /api/events.java?action=unregister
         API -> DB: Remove Registration
         API -> DB: Decrement Count
         DB -> API: Success
@@ -180,7 +180,7 @@ actor Volunteer
 
 == Organizer Sends Message ==
 Organizer -> OD: Click Message Volunteers
-OD -> MAPI: GET /api/registrations.php?organizer_id={id}
+OD -> MAPI: GET /api/registrations.java?organizer_id={id}
 MAPI -> DB: Fetch Volunteers
 DB -> MAPI: Volunteer List
 MAPI -> OD: Display List
@@ -189,7 +189,7 @@ OD -> Organizer: Show Volunteers
 Organizer -> OD: Select Volunteer
 Organizer -> OD: Enter Message
 Organizer -> OD: Click Send
-OD -> MAPI: POST /api/messages.php
+OD -> MAPI: POST /api/messages.java
 MAPI -> DB: INSERT Message (is_read=false)
 DB -> MAPI: Success
 MAPI -> OD: Message Sent
@@ -197,7 +197,7 @@ OD -> Organizer: Show Success
 
 == Volunteer Receives Message ==
 Volunteer -> VD: Login to Dashboard
-VD -> MAPI: GET /api/messages.php?user_id={id}
+VD -> MAPI: GET /api/messages.java?user_id={id}
 MAPI -> DB: Fetch Messages
 DB -> MAPI: Messages List
 MAPI -> VD: Count Unread
@@ -207,7 +207,7 @@ Volunteer -> VD: Click Notification Bell
 VD -> Volunteer: Show Messages Modal
 
 Volunteer -> VD: Click Message
-VD -> MAPI: PUT /api/messages.php (Mark Read)
+VD -> MAPI: PUT /api/messages.java (Mark Read)
 MAPI -> DB: UPDATE is_read=true
 DB -> MAPI: Success
 MAPI -> VD: Updated
@@ -226,12 +226,12 @@ package "Frontend" {
 }
 
 package "Backend API" {
-    component [users.php] as UP
-    component [events.php] as EP
-    component [messages.php] as MP
-    component [registrations.php] as RP
-    component [hours.php] as HP
-    component [badges.php] as BP
+    component [users.java] as UP
+    component [events.java] as EP
+    component [messages.java] as MP
+    component [registrations.java] as RP
+    component [hours.java] as HP
+    component [badges.java] as BP
 }
 
 database "MySQL Database" {
