@@ -1,9 +1,7 @@
 -- Insert sample events into the events table
 -- Make sure to run this after the main database schema
-
-USE volunteer_hub;
-
 -- Insert sample events with organizer_id = 31
+
 INSERT INTO events (title, category, date, time, location, description, max_volunteers, organizer_id, image) VALUES
 ('Beach Cleanup Drive', 'Environment', '2025-10-15', '09:00:00', 'Santa Monica Beach', 'Join us for a community beach cleanup to protect marine life and keep our beaches beautiful.', 50, 31, 'fas fa-leaf'),
 ('Food Bank Volunteer', 'Community', '2025-09-20', '10:00:00', 'Downtown Community Center', 'Help sort and distribute food to families in need in our community.', 30, 31, 'fas fa-heart'),
