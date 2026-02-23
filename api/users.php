@@ -27,7 +27,8 @@ function register() {
     
     $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
     
-    $stmt = $pdo->prepare("INSERT INTO users (name, email, password, role, phone, location, interests) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    // Use RETURNING id for PostgreSQL to get inserted id
+    $stmt = $pdo->prepare("INSERT INTO users (name, email, password, role, phone, location, interests) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id");
     
     try {
         $stmt->execute([
@@ -40,7 +41,8 @@ function register() {
             json_encode($data['interests'] ?? [])
         ]);
         
-        $userId = $pdo->lastInsertId();
+        $row = $stmt->fetch();
+        $userId = $row ? $row['id'] : null;
         $user = [
             'id' => $userId,
             'name' => $data['name'],
@@ -51,7 +53,7 @@ function register() {
             'interests' => $data['interests'] ?? []
         ];
         
-        echo json_encode(['success' => true, 'user' => $user]);
+    echo json_encode(['success' => true, 'user' => $user]);
     } catch(PDOException $e) {
         echo json_encode(['success' => false, 'message' => 'Email already exists']);
     }
