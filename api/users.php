@@ -3,6 +3,10 @@ require_once 'config.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+if ($method == 'OPTIONS') {
+    exit(0);
+}
+
 switch($method) {
     case 'POST':
         if (isset($_GET['action']) && $_GET['action'] == 'login') {
