@@ -1,13 +1,17 @@
 <?php
-// Database configuration
-$host = 'localhost';
-$dbname = 'volunteer_hub';
-$username = 'root';
-$password = '';
+// Database configuration (PostgreSQL)
+$host = getenv('DB_HOST') ?: 'localhost';
+$port = getenv('DB_PORT') ?: '5432';
+$dbname = getenv('DB_NAME') ?: 'volunteer_hub';
+$username = getenv('DB_USER') ?: 'postgres';
+$password = getenv('DB_PASSWORD') ?: '';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+    $dsn = "pgsql:host=$host;port=$port;dbname=$dbname";
+    $pdo = new PDO($dsn, $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // Return associative arrays by default
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 } catch(PDOException $e) {
     die("Connection failed: " . $e->getMessage());
 }
