@@ -120,7 +120,7 @@ async function loadOrganizerEvents() {
     
     try {
         console.log('Fetching events for organizer ID:', AppState.currentUser.id);
-        const response = await fetch(`http://localhost:8000/../api/events.php?organizer_id=${AppState.currentUser.id}`);
+        const response = await fetch(`${API_BASE_URL}/../api/events.php?organizer_id=${AppState.currentUser.id}`);
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -283,7 +283,7 @@ async function handleCreateEvent(event) {
     }
     
     try {
-        const response = await fetch('http://localhost:8000/../api/events.php', {
+        const response = await fetch(`${API_BASE_URL}/../api/events.php`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
@@ -403,7 +403,7 @@ async function viewVolunteers(eventId) {
     
     try {
         // Get volunteers from event_registrations table
-        const response = await fetch(`http://localhost:8000/../api/events.php?event_id=${eventId}&action=volunteers`);
+        const response = await fetch(`${API_BASE_URL}/../api/events.php?event_id=${eventId}&action=volunteers`);
         const volunteers = await response.json();
         
         let volunteerListHTML = `
@@ -469,7 +469,7 @@ async function deleteEvent(eventId) {
     }
     
     try {
-        const response = await fetch(`http://localhost:8000/../api/events.php?id=${eventId}`, {
+        const response = await fetch(`${API_BASE_URL}/../api/events.php?id=${eventId}`, {
             method: 'DELETE'
         });
         const result = await response.json();
@@ -530,7 +530,7 @@ async function removeVolunteer(eventId, volunteerId) {
     }
     
     try {
-        const response = await fetch(`http://localhost:8000/../api/events.php?action=unregister`, {
+        const response = await fetch(`${API_BASE_URL}/../api/events.php?action=unregister`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ event_id: eventId, volunteer_id: volunteerId })
@@ -611,7 +611,7 @@ async function loadVolunteersForMessaging() {
     let volunteers = [];
     
     try {
-        const response = await fetch(`http://localhost:8000/../api/registrations.php?organizer_id=${AppState.currentUser.id}`);
+        const response = await fetch(`${API_BASE_URL}/../api/registrations.php?organizer_id=${AppState.currentUser.id}`);
         volunteers = await response.json();
         console.log('Volunteers loaded:', volunteers);
     } catch (error) {
@@ -709,7 +709,7 @@ async function messageVolunteer(volunteerId, volunteerName) {
             message: messageText.trim()
         });
         
-        const response = await fetch('http://localhost:8000/../api/messages.php', {
+        const response = await fetch(`${API_BASE_URL}/../api/messages.php`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -754,7 +754,7 @@ async function sendMessage() {
             message: messageText
         });
         
-        const response = await fetch('http://localhost:8000/../api/messages.php', {
+        const response = await fetch(`${API_BASE_URL}/../api/messages.php`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
