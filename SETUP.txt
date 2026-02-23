@@ -1,0 +1,30 @@
+SETUP INSTRUCTIONS
+==================
+
+PHP is not installed. Choose ONE option:
+
+OPTION 1: Install Standalone PHP (Faster)
+------------------------------------------
+1. Download: https://windows.php.net/downloads/releases/php-8.3.15-Win32-vs16-x64.zip
+2. Extract to C:\php
+3. Add to PATH:
+   - Press Win + X, select "System"
+   - Click "Advanced system settings"
+   - Click "Environment Variables"
+   - Under "System variables", find "Path", click "Edit"
+   - Click "New", add: C:\php
+   - Click OK on all windows
+4. Restart PowerShell
+5. Run: php -S localhost:8000
+
+OPTION 2: Install XAMPP (Includes Apache + PostgreSQL)
+-------------------------------------------------------
+1. Download: https://www.apachefriends.org/download.html
+2. Install to C:\xampp
+3. Copy this project to: C:\xampp\htdocs\volunteerHub
+4. Open XAMPP Control Panel
+5. Start Apache and PostgreSQL
+6. Access: http://localhost/volunteerHub
+
+After setup, update database password in:
+api/config.php (line 7)
