@@ -39,16 +39,7 @@ function getUserRegistrations() {
     if ($organizerId) {
         // Get volunteers for organizer's events
         // Use string_agg in PostgreSQL instead of MySQL GROUP_CONCAT
-        $stmt = $pdo->prepare(""
-            SELECT DISTINCT u.id, u.name, u.email, u.phone, u.location,
-                   string_agg(e.title, ', ') as events
-            FROM event_registrations er
-            JOIN users u ON er.volunteer_id = u.id
-            JOIN events e ON er.event_id = e.id
-            WHERE e.organizer_id = ?
-            GROUP BY u.id, u.name, u.email, u.phone, u.location
-            ORDER BY u.name ASC
-        """);
+        $stmt = $pdo->prepare("\n            SELECT DISTINCT u.id, u.name, u.email, u.phone, u.location,\n                   string_agg(e.title, ', ') as events\n            FROM event_registrations er\n            JOIN users u ON er.volunteer_id = u.id\n            JOIN events e ON er.event_id = e.id\n            WHERE e.organizer_id = ?\n            GROUP BY u.id, u.name, u.email, u.phone, u.location\n            ORDER BY u.name ASC\n        ");
         
         $stmt->execute([$organizerId]);
         $volunteers = $stmt->fetchAll(PDO::FETCH_ASSOC);
