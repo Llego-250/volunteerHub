@@ -27,7 +27,7 @@ async function loadAllEvents() {
     if (!container) return;
     
     try {
-        const response = await fetch(`http://localhost:8000/../api/events.php`);
+        const response = await fetch(`${API_BASE_URL}/../api/events.php`);
         const events = await response.json();
         console.log('Events from API:', events);
         AppState.events = events;
@@ -190,7 +190,7 @@ async function handleEventRegistration(eventId) {
     
     try {
         // Send registration to database
-        const response = await fetch(`http://localhost:8000/../api/events.php?action=register`, {
+        const response = await fetch(`${API_BASE_URL}/../api/events.php?action=register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
