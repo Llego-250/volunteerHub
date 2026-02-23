@@ -112,8 +112,9 @@ function checkBadges($userId) {
     $stmt->execute([$userId]);
     $totalHours = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
     
-    // Get available badges
-    $badgesStmt = $pdo->query("SELECT * FROM badges WHERE hours_required <= $totalHours");
+    // Get available badges (parameterized)
+    $badgesStmt = $pdo->prepare("SELECT * FROM badges WHERE hours_required <= ?");
+    $badgesStmt->execute([$totalHours]);
     $availableBadges = $badgesStmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Award new badges
