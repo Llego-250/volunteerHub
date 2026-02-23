@@ -1,3 +1,4 @@
+-- Active: 1751206075856@@localhost@5432@volunteer_hub
 -- VolunteerHub Database Schema
 
 CREATE DATABASE volunteer_hub;
