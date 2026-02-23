@@ -85,7 +85,7 @@ async function handleLogin(event) {
     
     try {
         const apiPath = window.location.pathname.includes('/pages/') ? '../api/users.php?action=login' : 'api/users.php?action=login';
-        const response = await fetch(apiPath, {
+        const response = await fetch(`http://localhost:8000/${apiPath}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password, role: selectedRole })
@@ -138,7 +138,7 @@ async function handleSignup(event) {
     
     try {
         const apiPath = window.location.pathname.includes('/pages/') ? '../api/users.php?action=register' : 'api/users.php?action=register';
-        const response = await fetch(apiPath, {
+        const response = await fetch(`http://localhost:8000/${apiPath}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, email, password, role, phone, location })
