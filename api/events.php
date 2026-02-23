@@ -27,8 +27,9 @@ function createEvent() {
     global $pdo;
     $data = json_decode(file_get_contents('php://input'), true);
     
-    $stmt = $pdo->prepare("INSERT INTO events (title, category, date, time, location, description, requirements, max_volunteers, organizer_id, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    
+    // Use RETURNING id to get the newly created event id in PostgreSQL
+    $stmt = $pdo->prepare("INSERT INTO events (title, category, date, time, location, description, requirements, max_volunteers, organizer_id, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id");
+
     $stmt->execute([
         $data['title'],
         $data['category'],
@@ -41,8 +42,11 @@ function createEvent() {
         $data['organizerId'],
         $data['image'] ?? 'fas fa-calendar'
     ]);
-    
-    echo json_encode(['success' => true, 'message' => 'Event created successfully', 'id' => $pdo->lastInsertId()]);
+
+    $row = $stmt->fetch();
+    $newId = $row ? $row['id'] : null;
+
+    echo json_encode(['success' => true, 'message' => 'Event created successfully', 'id' => $newId]);
 }
 
 function getEvents() {
