@@ -1,10 +1,10 @@
 <?php
 // Database configuration (PostgreSQL)
-$host = getenv('DB_HOST') ?: 'localhost';
-$port = getenv('DB_PORT') ?: '5432';
-$dbname = getenv('DB_NAME') ?: 'volunteer_hub';
-$username = getenv('DB_USER') ?: 'postgres';
-$password = getenv('DB_PASSWORD') ?: '';
+$host = 'localhost';
+$port = '5432';
+$dbname = 'volunteer_hub';
+$username = 'postgres';
+$password = 'your_password_here';  // UPDATE THIS
 
 try {
     $dsn = "pgsql:host=$host;port=$port;dbname=$dbname";
