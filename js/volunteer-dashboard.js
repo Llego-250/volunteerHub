@@ -148,7 +148,7 @@ async function loadBrowseEvents() {
     if (!container) return;
     
     try {
-        const response = await fetch('../api/events.php');
+        const response = await fetch('http://localhost:8000/../api/events.php');
         const events = await response.json();
         AppState.events = events;
         
@@ -435,7 +435,7 @@ function unregisterFromEvent(eventId) {
     event.volunteers--;
     
     // Unregister from API
-    fetch(`../api/events.php?action=unregister&event_id=${eventId}&volunteer_id=${AppState.currentUser.id}`, {
+    fetch(`http://localhost:8000/../api/events.php?action=unregister&event_id=${eventId}&volunteer_id=${AppState.currentUser.id}`, {
         method: 'DELETE'
     }).catch(console.error);
     
@@ -521,7 +521,7 @@ async function loadMessages() {
             throw new Error('No user ID found');
         }
         
-        const url = `../api/messages.php?user_id=${AppState.currentUser.id}`;
+        const url = `http://localhost:8000/../api/messages.php?user_id=${AppState.currentUser.id}`;
         console.log('Fetching URL:', url);
         
         const response = await fetch(url);
@@ -626,7 +626,7 @@ async function loadMessages() {
 async function markAsRead(messageId) {
     try {
         console.log('Marking message as read:', messageId);
-        const response = await fetch('../api/messages.php', {
+        const response = await fetch('http://localhost:8000/../api/messages.php', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ messageId: messageId })
@@ -733,7 +733,7 @@ function toggleMessageExpansion(messageItem) {
 
 async function loadRegisteredEventsFromDB() {
     try {
-        const response = await fetch(`../api/events.php?volunteer_id=${AppState.currentUser.id}&action=registered`);
+        const response = await fetch(`http://localhost:8000/../api/events.php?volunteer_id=${AppState.currentUser.id}&action=registered`);
         const registeredEvents = await response.json();
         
         // Update user's registered events with database data
@@ -773,7 +773,7 @@ function registerForEvent(eventId) {
     event.volunteers++;
     
     // Register with API
-    fetch('../api/events.php?action=register', {
+    fetch('http://localhost:8000/../api/events.php?action=register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId: eventId, volunteerId: AppState.currentUser.id })
