@@ -1,19 +1,10 @@
 
-DO $$ BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'role_enum') THEN
-        CREATE TYPE role_enum AS ENUM ('volunteer', 'organizer');
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'hour_status_enum') THEN
-        CREATE TYPE hour_status_enum AS ENUM ('pending', 'approved');
-    END IF;
-END$$;
-
 CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    role role_enum NOT NULL,
+    role ENUM('volunteer', 'organizer') NOT NULL,
     phone VARCHAR(20),
     location VARCHAR(100),
     interests TEXT,
@@ -23,7 +14,7 @@ CREATE TABLE users (
 
 -- Events table
 CREATE TABLE events (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
     category VARCHAR(50) NOT NULL,
     date DATE NOT NULL,
@@ -40,7 +31,7 @@ CREATE TABLE events (
 
 -- Event registrations table
 CREATE TABLE event_registrations (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     event_id INT NOT NULL,
     volunteer_id INT NOT NULL,
     registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -51,11 +42,11 @@ CREATE TABLE event_registrations (
 
 -- Messages table
 CREATE TABLE messages (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     from_user_id INT NOT NULL,
     to_user_id INT NOT NULL,
     message TEXT NOT NULL,
-    is_read BOOLEAN DEFAULT FALSE,
+    is_read TINYINT(1) DEFAULT 0,
     sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (from_user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (to_user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -63,7 +54,7 @@ CREATE TABLE messages (
 
 -- Contact submissions table
 CREATE TABLE contacts (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL,
     subject VARCHAR(200) NOT NULL,
@@ -73,19 +64,19 @@ CREATE TABLE contacts (
 
 -- Volunteer hours table
 CREATE TABLE volunteer_hours (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     volunteer_id INT NOT NULL,
     event_id INT NOT NULL,
-    hours_worked NUMERIC(4,2) NOT NULL,
+    hours_worked DECIMAL(4,2) NOT NULL,
     date_worked DATE NOT NULL,
-    status hour_status_enum DEFAULT 'pending',
+    status ENUM('pending', 'approved') DEFAULT 'pending',
     FOREIGN KEY (volunteer_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
 );
 
 -- Badges table
 CREATE TABLE badges (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description TEXT NOT NULL,
     icon VARCHAR(50) NOT NULL,
@@ -95,7 +86,7 @@ CREATE TABLE badges (
 
 -- User badges table
 CREATE TABLE user_badges (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     badge_id INT NOT NULL,
     earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
