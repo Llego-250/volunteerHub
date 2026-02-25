@@ -1,24 +1,17 @@
 <?php
-// Database configuration (PostgreSQL)
-$host = 'localhost';
-$port = '5432';
-$dbname = 'volunteer_hub';
-$username = 'postgres';
-$password = 'your_password_here';  // UPDATE THIS
+// Database configuration (MySQL)
+$host = 'localhost:3306';
+$dbname = 'volunteerhub';
+$username = 'root';
+$password = '';
 
 try {
-    $dsn = "pgsql:host=$host;port=$port;dbname=$dbname";
+    $dsn = "mysql:host=$host;dbname=$dbname;charset=utf8mb4";
     $pdo = new PDO($dsn, $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    // Return associative arrays by default
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 } catch(PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
+    header('Content-Type: application/json');
+    die(json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]));
 }
-
-// CORS headers
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-header('Content-Type: application/json');
 ?>
