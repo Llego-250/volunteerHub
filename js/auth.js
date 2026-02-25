@@ -84,8 +84,9 @@ async function handleLogin(event) {
     const selectedRole = document.querySelector('input[name="loginRole"]:checked').value;
     
     try {
-        const apiPath = window.location.pathname.includes('/pages/') ? '../api/users.php?action=login' : 'api/users.php?action=login';
-        const response = await fetch(`${API_BASE_URL}/${apiPath}`, {
+        const basePath = window.location.pathname.includes('/Project/volunteerHub/') ? '/Project/volunteerHub' : '';
+        const apiPath = window.location.pathname.includes('/pages/') ? `${basePath}/../api/users.php?action=login` : `${basePath}/api/users.php?action=login`;
+        const response = await fetch(apiPath, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password, role: selectedRole })
@@ -137,8 +138,9 @@ async function handleSignup(event) {
     const location = document.getElementById('signupLocation').value;
     
     try {
-        const apiPath = window.location.pathname.includes('/pages/') ? '../api/users.php?action=register' : 'api/users.php?action=register';
-        const response = await fetch(`${API_BASE_URL}/${apiPath}`, {
+        const basePath = window.location.pathname.includes('/Project/volunteerHub/') ? '/Project/volunteerHub' : '';
+        const apiPath = window.location.pathname.includes('/pages/') ? `${basePath}/../api/users.php?action=register` : `${basePath}/api/users.php?action=register`;
+        const response = await fetch(apiPath, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, email, password, role, phone, location })
