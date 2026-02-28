@@ -12,7 +12,7 @@ require_once 'config.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-switch($method) {
+switch ($method) {
     case 'POST':
         if (isset($_GET['action']) && $_GET['action'] == 'login') {
             login();
@@ -30,15 +30,15 @@ switch($method) {
         break;
 }
 
-function register() {
+function register()
+{
     global $pdo;
     $data = json_decode(file_get_contents('php://input'), true);
-    
+
     $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
-    
-    // Use RETURNING id for PostgreSQL to get inserted id
-    $stmt = $pdo->prepare("INSERT INTO users (name, email, password, role, phone, location, interests) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id");
-    
+
+    $stmt = $pdo->prepare("INSERT INTO users (name, email, password, role, phone, location, interests) VALUES (?, ?, ?, ?, ?, ?, ?)");
+
     try {
         $stmt->execute([
             $data['name'],
@@ -49,9 +49,8 @@ function register() {
             $data['location'] ?? null,
             json_encode($data['interests'] ?? [])
         ]);
-        
-        $row = $stmt->fetch();
-        $userId = $row ? $row['id'] : null;
+
+        $userId = $pdo->lastInsertId();
         $user = [
             'id' => $userId,
             'name' => $data['name'],
@@ -61,21 +60,22 @@ function register() {
             'location' => $data['location'],
             'interests' => $data['interests'] ?? []
         ];
-        
-    echo json_encode(['success' => true, 'user' => $user]);
-    } catch(PDOException $e) {
+
+        echo json_encode(['success' => true, 'user' => $user]);
+    } catch (PDOException $e) {
         echo json_encode(['success' => false, 'message' => 'Email already exists']);
     }
 }
 
-function login() {
+function login()
+{
     global $pdo;
     $data = json_decode(file_get_contents('php://input'), true);
-    
+
     $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND role = ?");
     $stmt->execute([$data['email'], $data['role']]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if ($user && password_verify($data['password'], $user['password'])) {
         unset($user['password']);
         $user['interests'] = json_decode($user['interests'] ?? '[]');
@@ -85,22 +85,24 @@ function login() {
     }
 }
 
-function getUsers() {
+function getUsers()
+{
     global $pdo;
     $stmt = $pdo->query("SELECT id, name, email, role, phone, location, interests, join_date FROM users");
     $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    foreach($users as &$user) {
+
+    foreach ($users as &$user) {
         $user['interests'] = json_decode($user['interests'] ?? '[]');
     }
-    
+
     echo json_encode($users);
 }
 
-function updateUser() {
+function updateUser()
+{
     global $pdo;
     $data = json_decode(file_get_contents('php://input'), true);
-    
+
     $stmt = $pdo->prepare("UPDATE users SET name = ?, phone = ?, location = ?, interests = ? WHERE id = ?");
     $stmt->execute([
         $data['name'],
@@ -109,7 +111,7 @@ function updateUser() {
         json_encode($data['interests'] ?? []),
         $data['id']
     ]);
-    
+
     echo json_encode(['success' => true, 'message' => 'User updated successfully']);
 }
 ?>
