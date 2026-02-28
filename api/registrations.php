@@ -12,7 +12,7 @@ require_once 'config.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-switch($method) {
+switch ($method) {
     case 'GET':
         if (isset($_GET['event_id'])) {
             getEventVolunteers();
@@ -22,10 +22,11 @@ switch($method) {
         break;
 }
 
-function getEventVolunteers() {
+function getEventVolunteers()
+{
     global $pdo;
     $eventId = $_GET['event_id'];
-    
+
     $stmt = $pdo->prepare("
         SELECT u.id, u.name, u.email, u.phone, u.location, er.registered_at
         FROM event_registrations er
@@ -33,35 +34,44 @@ function getEventVolunteers() {
         WHERE er.event_id = ?
         ORDER BY er.registered_at DESC
     ");
-    
+
     $stmt->execute([$eventId]);
     $volunteers = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     echo json_encode($volunteers);
 }
 
-function getUserRegistrations() {
+function getUserRegistrations()
+{
     global $pdo;
     $userId = $_GET['user_id'] ?? null;
     $organizerId = $_GET['organizer_id'] ?? null;
-    
+
     if ($organizerId) {
         // Get volunteers for organizer's events
-        // Use string_agg in PostgreSQL instead of MySQL GROUP_CONCAT
-        $stmt = $pdo->prepare("\n            SELECT DISTINCT u.id, u.name, u.email, u.phone, u.location,\n                   string_agg(e.title, ', ') as events\n            FROM event_registrations er\n            JOIN users u ON er.volunteer_id = u.id\n            JOIN events e ON er.event_id = e.id\n            WHERE e.organizer_id = ?\n            GROUP BY u.id, u.name, u.email, u.phone, u.location\n            ORDER BY u.name ASC\n        ");
-        
+        $stmt = $pdo->prepare("
+            SELECT DISTINCT u.id, u.name, u.email, u.phone, u.location,
+                   GROUP_CONCAT(e.title SEPARATOR ', ') as events
+            FROM event_registrations er
+            JOIN users u ON er.volunteer_id = u.id
+            JOIN events e ON er.event_id = e.id
+            WHERE e.organizer_id = ?
+            GROUP BY u.id, u.name, u.email, u.phone, u.location
+            ORDER BY u.name ASC
+        ");
+
         $stmt->execute([$organizerId]);
         $volunteers = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         echo json_encode($volunteers);
         return;
     }
-    
+
     if (!$userId) {
         echo json_encode([]);
         return;
     }
-    
+
     $stmt = $pdo->prepare("
         SELECT e.*, u.name as organizer,
                (SELECT COUNT(*) FROM event_registrations er WHERE er.event_id = e.id) as volunteers
@@ -71,10 +81,10 @@ function getUserRegistrations() {
         WHERE er.volunteer_id = ?
         ORDER BY e.date ASC
     ");
-    
+
     $stmt->execute([$userId]);
     $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     echo json_encode($events);
 }
 ?>
