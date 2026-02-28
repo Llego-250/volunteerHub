@@ -1,9 +1,18 @@
 <?php
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Content-Type: application/json');
+
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    exit(0);
+}
+
 require_once 'config.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-switch($method) {
+switch ($method) {
     case 'POST':
         logHours();
         break;
@@ -19,10 +28,11 @@ switch($method) {
         break;
 }
 
-function logHours() {
+function logHours()
+{
     global $pdo;
     $data = json_decode(file_get_contents('php://input'), true);
-    
+
     $stmt = $pdo->prepare("INSERT INTO volunteer_hours (volunteer_id, event_id, hours_worked, date_worked) VALUES (?, ?, ?, ?)");
     $stmt->execute([
         $data['volunteerId'],
@@ -30,17 +40,18 @@ function logHours() {
         $data['hours'],
         $data['date']
     ]);
-    
+
     // Check for new badges
     checkBadges($data['volunteerId']);
-    
+
     echo json_encode(['success' => true, 'message' => 'Hours logged successfully']);
 }
 
-function getUserHours() {
+function getUserHours()
+{
     global $pdo;
     $userId = $_GET['user_id'];
-    
+
     $stmt = $pdo->prepare("
         SELECT vh.*, e.title as event_title
         FROM volunteer_hours vh
@@ -48,15 +59,15 @@ function getUserHours() {
         WHERE vh.volunteer_id = ?
         ORDER BY vh.date_worked DESC
     ");
-    
+
     $stmt->execute([$userId]);
     $hours = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Get total approved hours
     $totalStmt = $pdo->prepare("SELECT SUM(hours_worked) as total FROM volunteer_hours WHERE volunteer_id = ? AND status = 'approved'");
     $totalStmt->execute([$userId]);
     $total = $totalStmt->fetch(PDO::FETCH_ASSOC);
-    
+
     // Get user badges with progress
     $badgesStmt = $pdo->prepare("
         SELECT b.*, ub.earned_at,
@@ -67,9 +78,9 @@ function getUserHours() {
     ");
     $badgesStmt->execute([$userId]);
     $badges = $badgesStmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     $totalHours = $total['total'] ?? 0;
-    
+
     // Add progress to badges
     foreach ($badges as &$badge) {
         if (!$badge['earned']) {
@@ -77,7 +88,7 @@ function getUserHours() {
             $badge['hours_remaining'] = $remaining;
         }
     }
-    
+
     echo json_encode([
         'hours' => $hours,
         'totalHours' => $totalHours,
@@ -85,38 +96,40 @@ function getUserHours() {
     ]);
 }
 
-function approveHours() {
+function approveHours()
+{
     global $pdo;
     $data = json_decode(file_get_contents('php://input'), true);
-    
+
     $stmt = $pdo->prepare("UPDATE volunteer_hours SET status = 'approved' WHERE id = ?");
     $stmt->execute([$data['hoursId']]);
-    
+
     // Check for new badges after approval
     $hoursStmt = $pdo->prepare("SELECT volunteer_id FROM volunteer_hours WHERE id = ?");
     $hoursStmt->execute([$data['hoursId']]);
     $volunteer = $hoursStmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if ($volunteer) {
         checkBadges($volunteer['volunteer_id']);
     }
-    
+
     echo json_encode(['success' => true, 'message' => 'Hours approved successfully']);
 }
 
-function checkBadges($userId) {
+function checkBadges($userId)
+{
     global $pdo;
-    
+
     // Get total approved hours
     $stmt = $pdo->prepare("SELECT SUM(hours_worked) as total FROM volunteer_hours WHERE volunteer_id = ? AND status = 'approved'");
     $stmt->execute([$userId]);
     $totalHours = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
-    
+
     // Get available badges (parameterized)
     $badgesStmt = $pdo->prepare("SELECT * FROM badges WHERE hours_required <= ?");
     $badgesStmt->execute([$totalHours]);
     $availableBadges = $badgesStmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Award new badges
     foreach ($availableBadges as $badge) {
         try {
@@ -129,7 +142,8 @@ function checkBadges($userId) {
 }
 
 // Get all volunteer hours (admin or general listing)
-function getAllHours() {
+function getAllHours()
+{
     global $pdo;
     $stmt = $pdo->prepare("
         SELECT vh.*, e.title as event_title, u.name as volunteer_name
