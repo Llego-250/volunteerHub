@@ -1,32 +1,32 @@
 // Organizer Dashboard JavaScript
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Check if user is logged in and is an organizer
     if (!AppState.currentUser) {
         window.location.href = '../index.html';
         return;
     }
-    
+
     if (AppState.currentUser.role !== 'organizer') {
         window.location.href = 'volunteer-dashboard.html';
         return;
     }
-    
+
     initializeOrganizerDashboard();
 });
 
 async function initializeOrganizerDashboard() {
     console.log('Current user:', AppState.currentUser);
-    
+
     updateWelcomeMessage();
     loadCategoryOptions();
-    
+
     // Ensure my-events section is visible
     const myEventsSection = document.getElementById('my-events');
     if (myEventsSection) {
         myEventsSection.classList.remove('hidden');
     }
-    
+
     if (AppState.currentUser && AppState.currentUser.id) {
         await loadOrganizerEvents();
         updateOrganizerStats();
@@ -34,7 +34,7 @@ async function initializeOrganizerDashboard() {
         console.error('No current user or user ID found');
         document.getElementById('organizerEventsContainer').innerHTML = '<p>User not found. Please log in again.</p>';
     }
-    
+
     // Check if we should show profile or settings
     if (sessionStorage.getItem('showProfile') === 'true') {
         sessionStorage.removeItem('showProfile');
@@ -60,13 +60,13 @@ function toggleUserDropdown() {
 function showProfile() {
     const profileSection = document.getElementById('profile');
     const otherSections = document.querySelectorAll('.dashboard-section:not(#profile)');
-    
+
     if (profileSection) {
         otherSections.forEach(section => section.classList.add('hidden'));
         profileSection.classList.remove('hidden');
         loadProfileData();
     }
-    
+
     const dropdown = document.getElementById('dropdownMenu');
     if (dropdown) dropdown.classList.remove('show');
 }
@@ -77,7 +77,7 @@ function showSettings() {
 }
 
 // Close dropdown when clicking outside
-document.addEventListener('click', function(event) {
+document.addEventListener('click', function (event) {
     const dropdown = document.getElementById('userDropdown');
     if (dropdown && !dropdown.contains(event.target)) {
         document.getElementById('dropdownMenu').classList.remove('show');
@@ -98,11 +98,11 @@ function loadCategoryOptions() {
 
 function updateOrganizerStats() {
     if (!AppState.organizerEvents) return;
-    
+
     const currentDate = new Date();
     const activeEvents = AppState.organizerEvents.filter(event => new Date(event.date) >= currentDate);
     const totalVolunteers = AppState.organizerEvents.reduce((sum, event) => sum + parseInt(event.volunteers || 0), 0);
-    
+
     document.getElementById('totalEvents').textContent = AppState.organizerEvents.length;
     document.getElementById('totalVolunteers').textContent = totalVolunteers;
     document.getElementById('activeEvents').textContent = activeEvents.length;
@@ -110,30 +110,30 @@ function updateOrganizerStats() {
 
 async function loadOrganizerEvents() {
     const container = document.getElementById('organizerEventsContainer');
-    
+
     if (!container) {
         console.error('organizerEventsContainer not found');
         return;
     }
-    
+
     container.innerHTML = '<p>Loading events...</p>';
-    
+
     try {
         console.log('Fetching events for organizer ID:', AppState.currentUser.id);
-        const response = await fetch(`${API_BASE_URL}/../api/events.php?organizer_id=${AppState.currentUser.id}`);
-        
+        const response = await fetch(`../api/events.php?organizer_id=${AppState.currentUser.id}`);
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const text = await response.text();
         console.log('Raw response:', text);
-        
+
         const events = JSON.parse(text);
         AppState.organizerEvents = events;
-        
+
         console.log('Loaded events:', events);
-        
+
         if (!events || events.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
@@ -150,8 +150,8 @@ async function loadOrganizerEvents() {
         console.error('Error loading events from API:', error);
         // Fallback to sample events for demo purposes
         const sampleOrganizerEvents = [
-            {id: 1, title: "Beach Cleanup Drive", category: "Environment", date: "2026-03-15", time: "09:00", location: "Santa Monica Beach", description: "Join us for a community beach cleanup to protect marine life.", volunteers: 15, max_volunteers: 50},
-            {id: 2, title: "Food Bank Volunteer", category: "Community", date: "2026-04-20", time: "10:00", location: "Downtown Community Center", description: "Help sort and distribute food to families in need.", volunteers: 8, max_volunteers: 30}
+            { id: 1, title: "Beach Cleanup Drive", category: "Environment", date: "2026-03-15", time: "09:00", location: "Santa Monica Beach", description: "Join us for a community beach cleanup to protect marine life.", volunteers: 15, max_volunteers: 50 },
+            { id: 2, title: "Food Bank Volunteer", category: "Community", date: "2026-04-20", time: "10:00", location: "Downtown Community Center", description: "Help sort and distribute food to families in need.", volunteers: 8, max_volunteers: 30 }
         ];
         AppState.organizerEvents = sampleOrganizerEvents;
         container.innerHTML = sampleOrganizerEvents.map(event => createOrganizerEventCard(event)).join('');
@@ -162,20 +162,20 @@ function createOrganizerEventCard(event) {
     const eventDate = new Date(event.date);
     const currentDate = new Date();
     const isUpcoming = eventDate >= currentDate;
-    const formattedDate = eventDate.toLocaleDateString('en-US', { 
+    const formattedDate = eventDate.toLocaleDateString('en-US', {
         weekday: 'short',
-        month: 'short', 
+        month: 'short',
         day: 'numeric',
         year: 'numeric'
     });
-    
+
     const maxVol = event.max_volunteers || event.maxVolunteers || 0;
     const volunteers = event.volunteers || 0;
     const progressPercentage = maxVol > 0 ? (volunteers / maxVol) * 100 : 0;
-    
+
     let status = 'completed';
     let statusText = 'Completed';
-    
+
     if (isUpcoming) {
         const daysDiff = Math.ceil((eventDate - currentDate) / (1000 * 60 * 60 * 24));
         if (daysDiff <= 7) {
@@ -186,7 +186,7 @@ function createOrganizerEventCard(event) {
             statusText = 'Upcoming';
         }
     }
-    
+
     return `
         <div class="dashboard-event-card">
             <div class="event-header">
@@ -259,7 +259,7 @@ function hideCreateEventForm() {
 
 async function handleCreateEvent(event) {
     event.preventDefault();
-    
+
     const formData = {
         title: document.getElementById('eventTitle').value,
         category: document.getElementById('eventCategory').value,
@@ -271,29 +271,29 @@ async function handleCreateEvent(event) {
         requirements: document.getElementById('eventRequirements').value,
         organizerId: AppState.currentUser.id
     };
-    
+
     // Validate date is in the future
     const eventDate = new Date(formData.date);
     const currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0);
-    
+
     if (eventDate < currentDate) {
         showAlert('Event date must be in the future.', 'error');
         return;
     }
-    
+
     try {
-        const response = await fetch(`${API_BASE_URL}/../api/events.php`, {
+        const response = await fetch('../api/events.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
         });
-        
+
         const text = await response.text();
         console.log('Response:', text);
-        
+
         const result = JSON.parse(text);
-        
+
         if (result.success) {
             await loadOrganizerEvents();
             updateOrganizerStats();
@@ -318,22 +318,22 @@ function getRandomEventIcon(category) {
         'Elderly Care': 'fas fa-user-friends',
         'Youth Programs': 'fas fa-child'
     };
-    
+
     return icons[category] || 'fas fa-calendar';
 }
 
 function manageEvent(eventId) {
     const event = AppState.organizerEvents.find(e => e.id === eventId);
     if (!event) return;
-    
+
     const eventDate = new Date(event.date);
-    const formattedDate = eventDate.toLocaleDateString('en-US', { 
+    const formattedDate = eventDate.toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
         day: 'numeric'
     });
-    
+
     document.getElementById('eventManageContent').innerHTML = `
         <div class="event-detail-content">
             <div class="event-detail-header">
@@ -393,19 +393,19 @@ function manageEvent(eventId) {
             </div>
         </div>
     `;
-    
+
     document.getElementById('eventManageModal').style.display = 'block';
 }
 
 async function viewVolunteers(eventId) {
     const event = AppState.organizerEvents.find(e => e.id === eventId);
     if (!event) return;
-    
+
     try {
         // Get volunteers from event_registrations table
-        const response = await fetch(`${API_BASE_URL}/../api/events.php?event_id=${eventId}&action=volunteers`);
+        const response = await fetch(`../api/events.php?event_id=${eventId}&action=volunteers`);
         const volunteers = await response.json();
-        
+
         let volunteerListHTML = `
             <div style="padding: 2rem;">
                 <h2>Volunteers for "${event.title}"</h2>
@@ -413,7 +413,7 @@ async function viewVolunteers(eventId) {
                     ${volunteers.length} of ${event.max_volunteers || event.maxVolunteers} volunteers registered
                 </p>
         `;
-        
+
         if (volunteers.length === 0) {
             volunteerListHTML += `
                 <div class="empty-state">
@@ -452,9 +452,9 @@ async function viewVolunteers(eventId) {
             });
             volunteerListHTML += '</div>';
         }
-        
+
         volunteerListHTML += '</div>';
-        
+
         document.getElementById('volunteerList').innerHTML = volunteerListHTML;
         document.getElementById('volunteerModal').style.display = 'block';
     } catch (error) {
@@ -467,13 +467,13 @@ async function deleteEvent(eventId) {
     if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
         return;
     }
-    
+
     try {
-        const response = await fetch(`${API_BASE_URL}/../api/events.php?id=${eventId}`, {
+        const response = await fetch(`../api/events.php?id=${eventId}`, {
             method: 'DELETE'
         });
         const result = await response.json();
-        
+
         if (result.success) {
             await loadOrganizerEvents();
             updateOrganizerStats();
@@ -489,11 +489,11 @@ async function deleteEvent(eventId) {
 function filterOrganizerEvents() {
     const filter = document.getElementById('eventStatusFilter').value;
     const currentDate = new Date();
-    
+
     if (!AppState.organizerEvents) return;
-    
+
     let userEvents = [...AppState.organizerEvents];
-    
+
     if (filter === 'upcoming') {
         userEvents = userEvents.filter(event => new Date(event.date) >= currentDate);
     } else if (filter === 'completed') {
@@ -505,7 +505,7 @@ function filterOrganizerEvents() {
             return daysDiff <= 7 && daysDiff >= 0;
         });
     }
-    
+
     const container = document.getElementById('organizerEventsContainer');
     if (userEvents.length === 0) {
         container.innerHTML = `
@@ -528,16 +528,16 @@ async function removeVolunteer(eventId, volunteerId) {
     if (!confirm('Are you sure you want to remove this volunteer from the event?')) {
         return;
     }
-    
+
     try {
-        const response = await fetch(`${API_BASE_URL}/../api/events.php?action=unregister`, {
+        const response = await fetch('../api/events.php?action=unregister', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ event_id: eventId, volunteer_id: volunteerId })
         });
-        
+
         const result = await response.json();
-        
+
         if (result.success) {
             await loadOrganizerEvents();
             updateOrganizerStats();
@@ -558,7 +558,7 @@ function closeVolunteerModal() {
 function hideProfile() {
     const profileSection = document.getElementById('profile');
     const otherSections = document.querySelectorAll('.dashboard-section:not(#profile)');
-    
+
     if (profileSection) {
         profileSection.classList.add('hidden');
         otherSections.forEach(section => section.classList.remove('hidden'));
@@ -568,12 +568,12 @@ function hideProfile() {
 function showSettings() {
     const settingsSection = document.getElementById('settings');
     const otherSections = document.querySelectorAll('.dashboard-section:not(#settings)');
-    
+
     if (settingsSection) {
         otherSections.forEach(section => section.classList.add('hidden'));
         settingsSection.classList.remove('hidden');
     }
-    
+
     const dropdown = document.getElementById('dropdownMenu');
     if (dropdown) dropdown.classList.remove('show');
 }
@@ -581,7 +581,7 @@ function showSettings() {
 function hideSettings() {
     const settingsSection = document.getElementById('settings');
     const otherSections = document.querySelectorAll('.dashboard-section:not(#settings)');
-    
+
     if (settingsSection) {
         settingsSection.classList.add('hidden');
         otherSections.forEach(section => section.classList.remove('hidden'));
@@ -609,18 +609,18 @@ function showMessages() {
 
 async function loadVolunteersForMessaging() {
     let volunteers = [];
-    
+
     try {
-        const response = await fetch(`${API_BASE_URL}/../api/registrations.php?organizer_id=${AppState.currentUser.id}`);
+        const response = await fetch(`../api/registrations.php?organizer_id=${AppState.currentUser.id}`);
         volunteers = await response.json();
         console.log('Volunteers loaded:', volunteers);
     } catch (error) {
         console.error('Error loading volunteers:', error);
         volunteers = [];
     }
-    
+
     const selectContainer = document.getElementById('volunteerSelect');
-    
+
     if (volunteers.length === 0) {
         selectContainer.innerHTML = `
             <div class="empty-state">
@@ -631,7 +631,7 @@ async function loadVolunteersForMessaging() {
         `;
         return;
     }
-    
+
     selectContainer.innerHTML = `
         <div class="volunteer-list-container">
             <h3>Select a Volunteer to Message:</h3>
@@ -650,10 +650,10 @@ async function loadVolunteersForMessaging() {
         </div>
         <div id="selectedVolunteerInfo" style="display: none;"></div>
     `;
-    
-    window.selectVolunteerForMessage = function(volunteerId) {
+
+    window.selectVolunteerForMessage = function (volunteerId) {
         const selectedVolunteer = volunteers.find(v => v.id == volunteerId);
-        
+
         document.querySelector('.volunteer-list-container').style.display = 'none';
         document.getElementById('selectedVolunteerInfo').style.display = 'block';
         document.getElementById('selectedVolunteerInfo').innerHTML = `
@@ -670,11 +670,11 @@ async function loadVolunteersForMessaging() {
                 </div>
             </div>
         `;
-        
+
         window.selectedVolunteerId = volunteerId;
     };
-    
-    window.showVolunteerList = function() {
+
+    window.showVolunteerList = function () {
         document.querySelector('.volunteer-list-container').style.display = 'block';
         document.getElementById('selectedVolunteerInfo').style.display = 'none';
         window.selectedVolunteerId = null;
@@ -697,19 +697,19 @@ function emailVolunteer(email, name) {
 
 async function messageVolunteer(volunteerId, volunteerName) {
     const messageText = prompt(`Send message to ${volunteerName}:`);
-    
+
     if (!messageText || !messageText.trim()) {
         return;
     }
-    
+
     try {
         console.log('Sending message:', {
             fromUserId: AppState.currentUser.id,
             toUserId: parseInt(volunteerId),
             message: messageText.trim()
         });
-        
-        const response = await fetch(`${API_BASE_URL}/../api/messages.php`, {
+
+        const response = await fetch('../api/messages.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -718,10 +718,10 @@ async function messageVolunteer(volunteerId, volunteerName) {
                 message: messageText.trim()
             })
         });
-        
+
         const result = await response.json();
         console.log('Message API response:', result);
-        
+
         if (result.success) {
             showAlert(`Message sent to ${volunteerName}!`, 'success');
         } else {
@@ -736,25 +736,25 @@ async function messageVolunteer(volunteerId, volunteerName) {
 async function sendMessage() {
     const selectedVolunteerId = window.selectedVolunteerId;
     const messageText = document.getElementById('dynamicMessageText').value.trim();
-    
+
     if (!selectedVolunteerId) {
         showAlert('Please select a volunteer first.', 'error');
         return;
     }
-    
+
     if (!messageText) {
         showAlert('Please enter a message.', 'error');
         return;
     }
-    
+
     try {
         console.log('Sending message:', {
             fromUserId: AppState.currentUser.id,
             toUserId: parseInt(selectedVolunteerId),
             message: messageText
         });
-        
-        const response = await fetch(`${API_BASE_URL}/../api/messages.php`, {
+
+        const response = await fetch('../api/messages.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -763,10 +763,10 @@ async function sendMessage() {
                 message: messageText
             })
         });
-        
+
         const result = await response.json();
         console.log('Message API response:', result);
-        
+
         if (result.success) {
             showAlert('Message sent successfully!', 'success');
             document.getElementById('dynamicMessageText').value = '';
