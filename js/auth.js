@@ -78,28 +78,27 @@ function showSignup(defaultRole = 'volunteer') {
 
 async function handleLogin(event) {
     event.preventDefault();
-    
+
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     const selectedRole = document.querySelector('input[name="loginRole"]:checked').value;
-    
+
     try {
-        const basePath = window.location.pathname.includes('/Project/volunteerHub/') ? '/Project/volunteerHub' : '';
-        const apiPath = window.location.pathname.includes('/pages/') ? `${basePath}/../api/users.php?action=login` : `${basePath}/api/users.php?action=login`;
+        const apiPath = window.location.pathname.includes('/pages/') ? '../api/users.php?action=login' : 'api/users.php?action=login';
         const response = await fetch(apiPath, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password, role: selectedRole })
         });
-        
+
         const result = await response.json();
-        
+
         if (result.success) {
             AppState.currentUser = result.user;
             saveUser();
             updateAuthUI();
             closeModal();
-            
+
             // Redirect to appropriate dashboard
             setTimeout(() => {
                 const currentPath = window.location.pathname;
@@ -117,7 +116,7 @@ async function handleLogin(event) {
                     }
                 }
             }, 1000);
-            
+
             showAlert('Login successful!', 'success');
         } else {
             showAlert(result.message || 'Invalid credentials', 'error');
@@ -129,31 +128,30 @@ async function handleLogin(event) {
 
 async function handleSignup(event) {
     event.preventDefault();
-    
+
     const name = document.getElementById('signupName').value;
     const email = document.getElementById('signupEmail').value;
     const password = document.getElementById('signupPassword').value;
     const role = document.getElementById('signupRole').value;
     const phone = document.getElementById('signupPhone').value;
     const location = document.getElementById('signupLocation').value;
-    
+
     try {
-        const basePath = window.location.pathname.includes('/Project/volunteerHub/') ? '/Project/volunteerHub' : '';
-        const apiPath = window.location.pathname.includes('/pages/') ? `${basePath}/../api/users.php?action=register` : `${basePath}/api/users.php?action=register`;
+        const apiPath = window.location.pathname.includes('/pages/') ? '../api/users.php?action=register' : 'api/users.php?action=register';
         const response = await fetch(apiPath, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, email, password, role, phone, location })
         });
-        
+
         const result = await response.json();
-        
+
         if (result.success) {
             AppState.currentUser = result.user;
             saveUser();
             updateAuthUI();
             closeModal();
-            
+
             // Redirect to appropriate dashboard
             setTimeout(() => {
                 const currentPath = window.location.pathname;
@@ -171,7 +169,7 @@ async function handleSignup(event) {
                     }
                 }
             }, 1000);
-            
+
             showAlert('Account created successfully! Welcome to VolunteerHub!', 'success');
         } else {
             showAlert(result.message || 'Registration failed', 'error');
